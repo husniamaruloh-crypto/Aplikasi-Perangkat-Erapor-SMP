@@ -949,9 +949,84 @@
                     </div>
                 </div>
 
+                <div class="border-t border-slate-200 pt-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <h4 class="font-bold text-slate-800">Keterangan Pindah Sekolah (Mutasi Keluar)</h4>
+                        <span class="text-[11px] text-slate-500">Opsional — diisi jika peserta didik pindah sekolah</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Pindah / Keluar</label>
+                            <input type="text" id="f_mutasi_tgl" placeholder="Contoh: 15 Agustus 2025" class="w-full px-3 py-2 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Kelas yang Ditinggalkan</label>
+                            <input type="text" id="f_mutasi_kelas" placeholder="Contoh: VII-A" class="w-full px-3 py-2 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Sebab-sebab Keluar / Alasan</label>
+                            <input type="text" id="f_mutasi_alasan" placeholder="Contoh: Pindah mengikuti orang tua" class="w-full px-3 py-2 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Orang Tua / Wali (Tanda Tangan Mutasi)</label>
+                            <input type="text" id="f_mutasi_ortu" placeholder="Contoh: Nama Ayah / Ibu / Wali" class="w-full px-3 py-2 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex justify-end gap-2 pt-4 border-t border-slate-200">
                     <button type="button" onclick="closeModal('modalSiswa')" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl cursor-pointer">Batal</button>
                     <button type="submit" class="px-6 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm cursor-pointer">Simpan Data Siswa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL INPUT CEPAT KETERANGAN PINDAH (MUTASI) -->
+    <div id="modalMutasi" class="no-print hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Input Keterangan Pindah (Mutasi)</h3>
+                    <p id="mutasiModalSubtitle" class="text-xs text-slate-500 mt-0.5">-</p>
+                </div>
+                <button type="button" onclick="closeModal('modalMutasi')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form onsubmit="saveMutasiData(event, false)" class="p-6 space-y-4 text-sm">
+                <input type="hidden" id="m_student_id">
+                <div class="p-3 rounded-xl bg-indigo-50/80 border border-indigo-200 text-xs text-indigo-900 space-y-0.5">
+                    <div class="font-semibold">Pengesahan Kepala Sekolah (<span id="m_tapel_label">TA 2025/2026</span>):</div>
+                    <div><strong id="m_kepsek_label">-</strong> &bull; NIP: <span id="m_nip_label" class="font-mono">-</span></div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Pindah / Keluar</label>
+                        <input type="text" id="m_tgl" placeholder="Contoh: 15 Agustus 2025" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Kelas yang Ditinggalkan</label>
+                        <input type="text" id="m_kelas" placeholder="Contoh: VII-A" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                        <div id="m_kelas_quick" class="mt-1.5 flex flex-wrap gap-1"></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Sebab-sebab Keluar atau Atas Permintaan (Alasan)</label>
+                    <textarea id="m_alasan" rows="2" placeholder="Contoh: Pindah mengikuti orang tua / Atas permintaan orang tua" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Orang Tua / Wali (Penandatangan)</label>
+                    <input type="text" id="m_ortu" placeholder="Masukkan nama orang tua / wali" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                    <div id="m_ortu_quick" class="mt-1.5 flex flex-wrap gap-1"></div>
+                </div>
+                <div class="flex flex-wrap justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modalMutasi')" class="px-4 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl cursor-pointer">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-900 rounded-xl cursor-pointer">Simpan</button>
+                    <button type="button" onclick="saveMutasiData(event, true)" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl cursor-pointer">
+                        <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                        <span>Simpan & Cetak Mutasi</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -1236,7 +1311,8 @@
             return {
                 ...s,
                 tgl_lahir: formatTanggalIndonesia(s.tgl_lahir),
-                diterima_tgl: formatTanggalIndonesia(s.diterima_tgl)
+                diterima_tgl: formatTanggalIndonesia(s.diterima_tgl),
+                mutasi_tgl: formatTanggalIndonesia(s.mutasi_tgl)
             };
         }
 
@@ -1688,6 +1764,9 @@
                     <td class="p-3 whitespace-nowrap">${s.telp_wali || '-'}</td>
                     <td class="p-3 text-right whitespace-nowrap">
                         <div class="inline-flex items-center gap-1">
+                            <button type="button" onclick="openMutasiModal('${s.id}')" title="Input Keterangan Pindah (Mutasi)" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md transition cursor-pointer">
+                                <i data-lucide="file-output" class="w-3.5 h-3.5"></i>
+                            </button>
                             <button type="button" onclick="printSingle('${s.id}')" title="Cetak" class="p-1 text-blue-600 hover:bg-blue-50 rounded-md transition cursor-pointer">
                                 <i data-lucide="printer" class="w-3.5 h-3.5"></i>
                             </button>
@@ -1714,7 +1793,8 @@
                 'ANAK_KE', 'ALAMAT_SISWA', 'TELEPON_SISWA', 'SEKOLAH_ASAL',
                 'DITERIMA_KELAS', 'DITERIMA_TANGGAL', 'NAMA_AYAH', 'PEKERJAAN_AYAH',
                 'NAMA_IBU', 'PEKERJAAN_IBU', 'ALAMAT_ORTU', 'TELEPON_ORTU',
-                'NAMA_WALI', 'PEKERJAAN_WALI', 'ALAMAT_WALI', 'TELEPON_WALI'
+                'NAMA_WALI', 'PEKERJAAN_WALI', 'ALAMAT_WALI', 'TELEPON_WALI',
+                'TANGGAL_MUTASI', 'KELAS_DITINGGALKAN', 'ALASAN_MUTASI', 'ORTU_MUTASI'
             ]];
             const rows = list.map((s, idx) => [
                 idx + 1, s.nis || '', s.nisn || '', s.nama || '', s.kelas || '', s.jk || '',
@@ -1722,7 +1802,8 @@
                 s.anak_ke || '', s.alamat || '', s.telp || '', s.sekolah_asal || '',
                 s.diterima_kelas || '', formatTanggalIndonesia(s.diterima_tgl), s.nama_ayah || '', s.kerja_ayah || '',
                 s.nama_ibu || '', s.kerja_ibu || '', s.alamat_ortu || s.alamat || '', s.telp_ortu || '',
-                s.nama_wali || '', s.kerja_wali || '', s.alamat_wali || '', s.telp_wali || ''
+                s.nama_wali || '', s.kerja_wali || '', s.alamat_wali || '', s.telp_wali || '',
+                formatTanggalIndonesia(s.mutasi_tgl), s.mutasi_kelas || '', s.mutasi_alasan || '', s.mutasi_ortu || ''
             ]);
             const ws = XLSX.utils.aoa_to_sheet([...headers, ...rows]);
             const wb = XLSX.utils.book_new();
@@ -1776,6 +1857,9 @@
                     <td class="p-3.5 hidden xl:table-cell text-slate-600">${s.nama_ayah} / ${s.nama_ibu}</td>
                     <td class="p-3.5 text-right whitespace-nowrap">
                         <div class="inline-flex items-center gap-1">
+                            <button type="button" onclick="openMutasiModal('${s.id}')" title="Input Keterangan Pindah (Mutasi)" class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer">
+                                <i data-lucide="file-output" class="w-4 h-4"></i>
+                            </button>
                             <button type="button" onclick="printSingle('${s.id}')" title="Cetak Perangkat Siswa Ini" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer">
                                 <i data-lucide="printer" class="w-4 h-4"></i>
                             </button>
@@ -2099,6 +2183,7 @@
             const s = students.find(item => item.id === id);
             if (!s) return;
             document.getElementById('modalSiswaTitle').textContent = 'Edit Biodata Peserta Didik';
+            document.getElementById('siswaForm').reset();
             document.getElementById('edit_id').value = s.id;
             Object.keys(s).forEach(k => {
                 const el = document.getElementById(`f_${k}`);
@@ -2114,6 +2199,78 @@
             }
             document.getElementById('modalSiswa').classList.remove('hidden');
             refreshIcons();
+        }
+
+        function openMutasiModal(id) {
+            const s = students.find(item => item.id === id);
+            if (!s) return;
+            const tapelSiswa = s.tapel || activeTapel;
+            const periodInfo = getPeriodData(tapelSiswa);
+
+            document.getElementById('m_student_id').value = s.id;
+            document.getElementById('mutasiModalSubtitle').textContent = `${s.nama} • Kelas ${s.kelas} • TA ${tapelSiswa}`;
+            document.getElementById('m_tapel_label').textContent = `TA ${tapelSiswa}`;
+            document.getElementById('m_kepsek_label').textContent = periodInfo.kepsek || '-';
+            document.getElementById('m_nip_label').textContent = periodInfo.nip_kepsek || '-';
+
+            document.getElementById('m_tgl').value = s.mutasi_tgl || '';
+            document.getElementById('m_kelas').value = s.mutasi_kelas || s.kelas || '';
+            document.getElementById('m_alasan').value = s.mutasi_alasan || '';
+
+            const defaultOrtu = s.mutasi_ortu || [s.nama_ayah, s.nama_ibu, s.nama_wali].find(v => v && v !== '-') || '';
+            document.getElementById('m_ortu').value = defaultOrtu;
+
+            const klsQuick = document.getElementById('m_kelas_quick');
+            if (klsQuick) {
+                klsQuick.innerHTML = s.kelas
+                    ? `<button type="button" onclick="document.getElementById('m_kelas').value='${s.kelas.replace(/'/g, "\\'")}'" class="px-2 py-0.5 text-[11px] bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-md cursor-pointer">Isi: ${s.kelas}</button>`
+                    : '';
+            }
+
+            const ortuQuick = document.getElementById('m_ortu_quick');
+            if (ortuQuick) {
+                const candidates = [
+                    { label: 'Ayah', val: s.nama_ayah },
+                    { label: 'Ibu', val: s.nama_ibu },
+                    { label: 'Wali', val: s.nama_wali }
+                ].filter(c => c.val && c.val !== '-');
+                ortuQuick.innerHTML = candidates.map(c =>
+                    `<button type="button" onclick="document.getElementById('m_ortu').value='${c.val.replace(/'/g, "\\'")}'" class="px-2 py-0.5 text-[11px] bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-md cursor-pointer">${c.label}: ${c.val}</button>`
+                ).join('');
+            }
+
+            document.getElementById('modalMutasi').classList.remove('hidden');
+            refreshIcons();
+        }
+
+        async function saveMutasiData(e, shouldPrint = false) {
+            if (e && e.preventDefault) e.preventDefault();
+            const id = document.getElementById('m_student_id').value;
+            const idx = students.findIndex(s => s.id === id);
+            if (idx === -1) return;
+
+            students[idx] = {
+                ...students[idx],
+                mutasi_tgl: formatTanggalIndonesia(document.getElementById('m_tgl').value.trim()),
+                mutasi_kelas: document.getElementById('m_kelas').value.trim(),
+                mutasi_alasan: document.getElementById('m_alasan').value.trim(),
+                mutasi_ortu: document.getElementById('m_ortu').value.trim()
+            };
+
+            const targetStudent = students[idx];
+            localStorage.setItem('erapor_students', JSON.stringify(students));
+            renderTable();
+            renderRekapTable();
+            if (!document.getElementById('view-preview')?.classList.contains('hidden')) {
+                renderPreview();
+            }
+            closeModal('modalMutasi');
+            showToast(`Data mutasi ${targetStudent.nama} berhasil disimpan!`);
+
+            if (shouldPrint) {
+                openPrintSession([targetStudent], { cover: false, sekolah: false, biodata: false, mutasi: true });
+            }
+            await syncStudentsToSpreadsheet(targetStudent.tapel || activeTapel);
         }
 
         // --- NAVIGASI TAB ---
@@ -2334,7 +2491,7 @@
                 'agama', 'status_keluarga', 'anak_ke', 'telp', 'alamat', 'sekolah_asal',
                 'diterima_kelas', 'diterima_tgl', 'nama_ayah', 'kerja_ayah', 'nama_ibu',
                 'kerja_ibu', 'alamat_ortu', 'telp_ortu', 'nama_wali', 'kerja_wali',
-                'alamat_wali', 'telp_wali'
+                'alamat_wali', 'telp_wali', 'mutasi_tgl', 'mutasi_kelas', 'mutasi_alasan', 'mutasi_ortu'
             ];
             const obj = {
                 id: id || 'std_' + Date.now(),
@@ -2343,7 +2500,7 @@
             fields.forEach(f => {
                 const el = document.getElementById(`f_${f}`);
                 let val = el ? el.value : '';
-                if (f === 'tgl_lahir' || f === 'diterima_tgl') {
+                if (f === 'tgl_lahir' || f === 'diterima_tgl' || f === 'mutasi_tgl') {
                     val = formatTanggalIndonesia(val);
                 }
                 obj[f] = val;
@@ -2461,7 +2618,11 @@
                             nama_wali: String(r.NAMA_WALI || '-'),
                             alamat_wali: String(r.ALAMAT_WALI || '-'),
                             telp_wali: String(r.TELEPON_WALI || '-'),
-                            kerja_wali: String(r.PEKERJAAN_WALI || '-')
+                            kerja_wali: String(r.PEKERJAAN_WALI || '-'),
+                            mutasi_tgl: formatTanggalIndonesia(r.TANGGAL_MUTASI || ''),
+                            mutasi_kelas: String(r.KELAS_MUTASI || r.KELAS_DITINGGALKAN || ''),
+                            mutasi_alasan: String(r.ALASAN_MUTASI || ''),
+                            mutasi_ortu: String(r.ORTU_MUTASI || '')
                         });
                         importedCount++;
                     });
@@ -2500,11 +2661,11 @@
             return teks;
         }
 
-        function generateDocumentsHTML(targetStudents) {
-            const incCover = document.getElementById('chkCover').checked;
-            const incSekolah = document.getElementById('chkSekolah').checked;
-            const incBiodata = document.getElementById('chkBiodata').checked;
-            const incMutasi = document.getElementById('chkMutasi').checked;
+        function generateDocumentsHTML(targetStudents, forceDocOptions = null) {
+            const incCover = forceDocOptions ? !!forceDocOptions.cover : document.getElementById('chkCover').checked;
+            const incSekolah = forceDocOptions ? !!forceDocOptions.sekolah : document.getElementById('chkSekolah').checked;
+            const incBiodata = forceDocOptions ? !!forceDocOptions.biodata : document.getElementById('chkBiodata').checked;
+            const incMutasi = forceDocOptions ? !!forceDocOptions.mutasi : document.getElementById('chkMutasi').checked;
 
             if (!incCover && !incSekolah && !incBiodata && !incMutasi) {
                 return '<div class="p-8 text-center text-slate-600 font-sans">Pilih minimal satu jenis dokumen cetak di atas.</div>';
@@ -2652,8 +2813,20 @@
                     </div>`;
                 }
 
-                // 4. KETERANGAN PINDAH SEKOLAH (MUTASI - Letter 215.9mm x 279.4mm)
+                // 4. KETERANGAN PINDAH SEKOLAH (MUTASI - A4 210mm x 297mm)
                 if (incMutasi) {
+                    const periodInfo = getPeriodData(s.tapel || activeTapel);
+                    const mutasiTgl = formatTanggalIndonesia(s.mutasi_tgl || '');
+                    const mutasiKelas = (s.mutasi_kelas || '').trim();
+                    const mutasiAlasan = (s.mutasi_alasan || '').trim();
+                    const mutasiOrtu = (s.mutasi_ortu || '').trim();
+                    const cityFromTitimangsa = (periodInfo.titimangsa || '').includes(',')
+                        ? periodInfo.titimangsa.split(',')[0].trim()
+                        : (schoolData.kota || '').replace(/^Kabupaten\s+/i, '').trim();
+                    const mutasiTanggalTtd = mutasiTgl
+                        ? `${cityFromTitimangsa ? cityFromTitimangsa + ', ' : ''}${mutasiTgl}`
+                        : '......................., ....................... 20....';
+
                     html += `
                     <div class="print-doc page-mutasi">
                         <div style="text-align: center; font-size: 12pt; font-weight: bold; margin-bottom: 5mm;">
@@ -2673,22 +2846,42 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${[1, 2, 3].map(() => `
-                                <tr>
-                                    <td style="height: 52mm;"></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td style="font-size: 8.5pt;">
-                                        <div>......................., ....................... 20....</div>
-                                        <div>Kepala Sekolah,</div>
-                                        <div style="height: 12mm;"></div>
-                                        <div>...................................................</div>
-                                        <div>NIP.</div>
-                                        <div style="margin-top: 3mm;">Orang Tua/Wali,</div>
-                                        <div style="height: 11mm;"></div>
-                                        <div>...................................................</div>
-                                    </td>
-                                </tr>`).join('')}
+                                ${[0, 1, 2].map(rowIdx => {
+                                    if (rowIdx === 0) {
+                                        return `
+                                        <tr>
+                                            <td style="height: 52mm; font-size: 9.5pt; padding-top: 3mm;">${mutasiTgl}</td>
+                                            <td style="font-size: 9.5pt; padding-top: 3mm; text-align: center;">${mutasiKelas}</td>
+                                            <td style="font-size: 9.5pt; padding-top: 3mm; line-height: 1.35;">${mutasiAlasan}</td>
+                                            <td style="font-size: 8.5pt;">
+                                                <div>${mutasiTanggalTtd}</div>
+                                                <div>Kepala Sekolah,</div>
+                                                <div style="height: 12mm;"></div>
+                                                <div style="font-weight: bold;">${periodInfo.kepsek || '...................................................'}</div>
+                                                <div>NIP ${periodInfo.nip_kepsek || ''}</div>
+                                                <div style="margin-top: 3mm;">Orang Tua/Wali,</div>
+                                                <div style="height: 11mm;"></div>
+                                                <div style="${mutasiOrtu ? 'font-weight: bold;' : ''}">${mutasiOrtu || '...................................................'}</div>
+                                            </td>
+                                        </tr>`;
+                                    }
+                                    return `
+                                    <tr>
+                                        <td style="height: 52mm;"></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td style="font-size: 8.5pt;">
+                                            <div>......................., ....................... 20....</div>
+                                            <div>Kepala Sekolah,</div>
+                                            <div style="height: 12mm;"></div>
+                                            <div>...................................................</div>
+                                            <div>NIP.</div>
+                                            <div style="margin-top: 3mm;">Orang Tua/Wali,</div>
+                                            <div style="height: 11mm;"></div>
+                                            <div>...................................................</div>
+                                        </td>
+                                    </tr>`;
+                                }).join('')}
                             </tbody>
                         </table>
                     </div>`;
@@ -2745,8 +2938,8 @@
             openPrintSession(selected);
         }
 
-        function openPrintSession(targetStudents) {
-            const htmlContent = generateDocumentsHTML(targetStudents);
+        function openPrintSession(targetStudents, forceDocOptions = null) {
+            const htmlContent = generateDocumentsHTML(targetStudents, forceDocOptions);
             if (!htmlContent || htmlContent.includes('Pilih minimal satu jenis dokumen')) {
                 showToast('Centang minimal satu dokumen cetak (Sampul, Identitas, atau Biodata).');
                 return;
@@ -3040,7 +3233,8 @@
                 '  "id", "tapel", "nama", "nis", "nisn", "kelas", "jk", "tempat_lahir", "tgl_lahir",',
                 '  "agama", "status_keluarga", "anak_ke", "alamat", "telp", "sekolah_asal",',
                 '  "diterima_kelas", "diterima_tgl", "nama_ayah", "kerja_ayah", "nama_ibu",',
-                '  "kerja_ibu", "alamat_ortu", "telp_ortu", "nama_wali", "alamat_wali", "telp_wali", "kerja_wali"',
+                '  "kerja_ibu", "alamat_ortu", "telp_ortu", "nama_wali", "alamat_wali", "telp_wali", "kerja_wali",',
+                '  "mutasi_tgl", "mutasi_kelas", "mutasi_alasan", "mutasi_ortu"',
                 '];',
                 '',
                 'const PERIOD_HEADERS = ["tapel", "kepsek", "nip_kepsek", "titimangsa"];',
@@ -3118,14 +3312,16 @@
                 '  ss.getSheets().forEach(sh => {',
                 '    const name = sh.getName();',
                 '    if (name.startsWith("Siswa_") && sh.getLastRow() > 1) {',
-                '      const data = sh.getRange(2, 1, sh.getLastRow() - 1, STUDENT_HEADERS.length).getValues();',
+                '      const colCount = Math.min(Math.max(sh.getLastColumn(), 1), STUDENT_HEADERS.length);',
+                '      const data = sh.getRange(2, 1, sh.getLastRow() - 1, colCount).getValues();',
                 '      data.forEach(row => {',
                 '        if (!row[2]) return;',
                 '        const obj = {};',
                 '        STUDENT_HEADERS.forEach((h, i) => {',
-                '          obj[h] = (h === "tgl_lahir" || h === "diterima_tgl" || row[i] instanceof Date)',
-                '            ? formatDateValue(row[i])',
-                '            : String(row[i] || "");',
+                '          const val = i < colCount ? row[i] : "";',
+                '          obj[h] = (h === "tgl_lahir" || h === "diterima_tgl" || h === "mutasi_tgl" || val instanceof Date)',
+                '            ? formatDateValue(val)',
+                '            : String(val || "");',
                 '        });',
                 '        result.students.push(obj);',
                 '      });',
@@ -3214,7 +3410,7 @@
                 '      const rows = [STUDENT_HEADERS];',
                 '      list.forEach(s => {',
                 '        rows.push(STUDENT_HEADERS.map(h => {',
-                '          return (h === "tgl_lahir" || h === "diterima_tgl") ? formatDateValue(s[h]) : String(s[h] || "");',
+                '          return (h === "tgl_lahir" || h === "diterima_tgl" || h === "mutasi_tgl") ? formatDateValue(s[h]) : String(s[h] || "");',
                 '        }));',
                 '      });',
                 '      const range = sh.getRange(1, 1, rows.length, STUDENT_HEADERS.length);',
