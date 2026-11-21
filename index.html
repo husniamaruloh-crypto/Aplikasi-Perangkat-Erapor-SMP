@@ -270,6 +270,10 @@
                     <i data-lucide="users" class="w-4 h-4"></i>
                     <span>Data Peserta Didik</span>
                 </button>
+                <button type="button" onclick="switchTab('rekap')" id="tab-rekap" class="tab-btn flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition cursor-pointer">
+                    <i data-lucide="table-2" class="w-4 h-4"></i>
+                    <span>Tabel Data Per Kelas</span>
+                </button>
                 <button type="button" onclick="switchTab('sekolah')" id="tab-sekolah" class="tab-btn flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition cursor-pointer">
                     <i data-lucide="building-2" class="w-4 h-4"></i>
                     <span>Identitas Sekolah & Logo</span>
@@ -656,6 +660,94 @@
                     <!-- Lembar pratinjau A4 dirender di sini -->
                 </div>
             </section>
+
+            <!-- TAB 6: TABEL DATA LENGKAP PER KELAS -->
+            <section id="view-rekap" class="hidden space-y-4">
+                <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-base sm:text-lg font-bold text-slate-900">Tabel Lengkap Data Siswa Per Kelas</h2>
+                            <p class="text-xs text-slate-500">Menampilkan seluruh rincian biodata peserta didik pada Tahun Ajaran <strong id="rekapTapelLabel" class="text-indigo-700">2025/2026</strong>.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700">
+                                Total: <strong id="rekapTotalCount">0</strong> Siswa
+                            </span>
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700">
+                                Laki-laki: <strong id="rekapMaleCount">0</strong>
+                            </span>
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-rose-50 text-rose-700">
+                                Perempuan: <strong id="rekapFemaleCount">0</strong>
+                            </span>
+                            <button type="button" onclick="exportRekapExcel()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition cursor-pointer">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                                <span>Ekspor Excel</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row md:items-center gap-3 pt-2 border-t border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <label for="rekapFilterKelas" class="text-xs font-semibold text-slate-600 whitespace-nowrap">Filter Kelas:</label>
+                            <select id="rekapFilterKelas" onchange="onRekapKelasDropdownChange(this.value)" class="px-3.5 py-2 text-sm font-medium border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                <option value="">Semua Kelas</option>
+                            </select>
+                        </div>
+                        <div class="relative flex-1 max-w-md">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5"></i>
+                            <input type="text" id="rekapSearchInput" oninput="renderRekapTable()" placeholder="Cari nama, NIS, NISN, sekolah asal, atau nama orang tua..." class="w-full pl-10 pr-4 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div id="rekapKelasButtons" class="flex flex-wrap items-center gap-1.5">
+                        <!-- Tombol filter cepat per kelas dirender oleh JS -->
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto max-h-[70vh]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="sticky top-0 z-10 bg-slate-100 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                                <tr>
+                                    <th class="p-3 whitespace-nowrap text-center">No</th>
+                                    <th class="p-3 whitespace-nowrap">NIS</th>
+                                    <th class="p-3 whitespace-nowrap">NISN</th>
+                                    <th class="p-3 whitespace-nowrap">Nama Peserta Didik</th>
+                                    <th class="p-3 whitespace-nowrap">Kelas</th>
+                                    <th class="p-3 whitespace-nowrap">Jenis Kelamin</th>
+                                    <th class="p-3 whitespace-nowrap">Tempat, Tanggal Lahir</th>
+                                    <th class="p-3 whitespace-nowrap">Agama</th>
+                                    <th class="p-3 whitespace-nowrap">Status Keluarga</th>
+                                    <th class="p-3 whitespace-nowrap text-center">Anak ke</th>
+                                    <th class="p-3 min-w-[220px]">Alamat Peserta Didik</th>
+                                    <th class="p-3 whitespace-nowrap">Telp Siswa</th>
+                                    <th class="p-3 whitespace-nowrap">Sekolah Asal</th>
+                                    <th class="p-3 whitespace-nowrap">Diterima Kelas</th>
+                                    <th class="p-3 whitespace-nowrap">Tgl Diterima</th>
+                                    <th class="p-3 whitespace-nowrap">Nama Ayah</th>
+                                    <th class="p-3 whitespace-nowrap">Pekerjaan Ayah</th>
+                                    <th class="p-3 whitespace-nowrap">Nama Ibu</th>
+                                    <th class="p-3 whitespace-nowrap">Pekerjaan Ibu</th>
+                                    <th class="p-3 min-w-[220px]">Alamat Orang Tua</th>
+                                    <th class="p-3 whitespace-nowrap">Telp Ortu</th>
+                                    <th class="p-3 whitespace-nowrap">Nama Wali</th>
+                                    <th class="p-3 whitespace-nowrap">Pekerjaan Wali</th>
+                                    <th class="p-3 min-w-[180px]">Alamat Wali</th>
+                                    <th class="p-3 whitespace-nowrap">Telp Wali</th>
+                                    <th class="p-3 whitespace-nowrap text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rekapTableBody" class="divide-y divide-slate-100 text-slate-700">
+                                <!-- Diisi dinamis oleh JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="rekapEmptyState" class="hidden py-12 text-center">
+                        <i data-lucide="table-2" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+                        <p class="text-slate-500 font-medium">Tidak ada data siswa untuk kelas atau pencarian ini.</p>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -984,8 +1076,86 @@
             { id: 'u_w7b', nama: 'Budi Santoso, M.Pd.', role: 'walas', kelas: 'VII-B', username: 'walas7b', password: '123456' }
         ];
 
+        const BULAN_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const EN_MONTH_MAP = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, mei: 4, jun: 5, jul: 6, aug: 7, agu: 7, sep: 8, oct: 9, okt: 9, nov: 10, dec: 11, des: 11 };
+
+        function formatTanggalIndonesia(val) {
+            if (val === null || val === undefined) return '';
+            if (val instanceof Date && !isNaN(val.getTime())) {
+                const d = String(val.getDate()).padStart(2, '0');
+                return `${d} ${BULAN_ID[val.getMonth()]} ${val.getFullYear()}`;
+            }
+            const str = String(val).trim();
+            if (!str || str === '-') return str;
+
+            // Format JS Date.toString(): "Thu Jan 03 2013 00:00:00 GMT+0700 (Western Indonesia Time)"
+            const jsDateMatch = str.match(/^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})\b/i);
+            if (jsDateMatch) {
+                const mIdx = EN_MONTH_MAP[jsDateMatch[1].toLowerCase()];
+                if (mIdx !== undefined) {
+                    const d = String(parseInt(jsDateMatch[2], 10)).padStart(2, '0');
+                    return `${d} ${BULAN_ID[mIdx]} ${jsDateMatch[3]}`;
+                }
+            }
+
+            // Format ISO: "2013-01-03T17:00:00.000Z" atau "2013-01-03"
+            const isoOnlyMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (isoOnlyMatch) {
+                const mIdx = parseInt(isoOnlyMatch[2], 10) - 1;
+                if (mIdx >= 0 && mIdx <= 11) {
+                    return `${isoOnlyMatch[3]} ${BULAN_ID[mIdx]} ${isoOnlyMatch[1]}`;
+                }
+            }
+            if (/^\d{4}-\d{2}-\d{2}T/.test(str)) {
+                const dt = new Date(str);
+                if (!isNaN(dt.getTime())) {
+                    const parts = new Intl.DateTimeFormat('en-CA', {
+                        timeZone: 'Asia/Jakarta',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    }).format(dt).split('-');
+                    const mIdx = parseInt(parts[1], 10) - 1;
+                    if (mIdx >= 0 && mIdx <= 11) {
+                        return `${parts[2]} ${BULAN_ID[mIdx]} ${parts[0]}`;
+                    }
+                }
+            }
+
+            // Format DD/MM/YYYY atau DD-MM-YYYY
+            const dmyMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+            if (dmyMatch) {
+                const mIdx = parseInt(dmyMatch[2], 10) - 1;
+                if (mIdx >= 0 && mIdx <= 11) {
+                    const d = String(parseInt(dmyMatch[1], 10)).padStart(2, '0');
+                    return `${d} ${BULAN_ID[mIdx]} ${dmyMatch[3]}`;
+                }
+            }
+
+            // Serial number Excel (misal 41277)
+            if (/^\d{5}$/.test(str)) {
+                const serial = parseInt(str, 10);
+                if (serial >= 15000 && serial <= 80000) {
+                    const dt = new Date(Date.UTC(1899, 11, 30) + serial * 86400000);
+                    const d = String(dt.getUTCDate()).padStart(2, '0');
+                    return `${d} ${BULAN_ID[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`;
+                }
+            }
+
+            return str;
+        }
+
+        function normalizeStudentDates(s) {
+            if (!s) return s;
+            return {
+                ...s,
+                tgl_lahir: formatTanggalIndonesia(s.tgl_lahir),
+                diterima_tgl: formatTanggalIndonesia(s.diterima_tgl)
+            };
+        }
+
         let schoolData = JSON.parse(localStorage.getItem('erapor_school')) || defaultSchool;
-        let students = JSON.parse(localStorage.getItem('erapor_students')) || defaultStudents;
+        let students = (JSON.parse(localStorage.getItem('erapor_students')) || defaultStudents).map(normalizeStudentDates);
         let users = JSON.parse(localStorage.getItem('erapor_users')) || defaultUsers;
         let currentUser = JSON.parse(sessionStorage.getItem('erapor_current_user')) || null;
 
@@ -1001,6 +1171,7 @@
 
         // --- INISIALISASI ---
         window.onload = () => {
+            localStorage.setItem('erapor_students', JSON.stringify(students));
             refreshIcons();
             initAppsScriptTemplate();
             loadSpreadsheetConfigUI();
@@ -1045,6 +1216,7 @@
             ensureTapelOption(activeTapel);
             populateKelasFilter();
             renderTable();
+            renderRekapTable();
             showToast('Tahun Ajaran aktif: ' + activeTapel + ' (' + getSheetNameForTapel(activeTapel) + ')');
         }
 
@@ -1208,18 +1380,198 @@
 
         function populateKelasFilter() {
             const select = document.getElementById('filterKelas');
+            const rekapSelect = document.getElementById('rekapFilterKelas');
             const accessible = getAccessibleStudents();
             if (currentUser && currentUser.role === 'walas') {
                 select.innerHTML = `<option value="${currentUser.kelas}">Kelas ${currentUser.kelas}</option>`;
                 select.disabled = true;
+                if (rekapSelect) {
+                    rekapSelect.innerHTML = `<option value="${currentUser.kelas}">Kelas ${currentUser.kelas}</option>`;
+                    rekapSelect.disabled = true;
+                }
+                renderRekapKelasButtons([]);
                 return;
             }
             select.disabled = false;
             const currentVal = select.value;
             const kelasSet = [...new Set(accessible.map(s => s.kelas).filter(Boolean))].sort();
-            select.innerHTML = '<option value="">Semua Kelas</option>' +
+            const optionsHTML = '<option value="">Semua Kelas</option>' +
                 kelasSet.map(k => `<option value="${k}">${k}</option>`).join('');
-            select.value = currentVal;
+            select.innerHTML = optionsHTML;
+            select.value = kelasSet.includes(currentVal) ? currentVal : '';
+
+            if (rekapSelect) {
+                rekapSelect.disabled = false;
+                const prevRekapVal = rekapSelect.value;
+                rekapSelect.innerHTML = optionsHTML;
+                rekapSelect.value = kelasSet.includes(prevRekapVal) ? prevRekapVal : '';
+            }
+            renderRekapKelasButtons(kelasSet);
+        }
+
+        function renderRekapKelasButtons(kelasSet) {
+            const container = document.getElementById('rekapKelasButtons');
+            const rekapSelect = document.getElementById('rekapFilterKelas');
+            if (!container || !rekapSelect) return;
+
+            const accessible = getAccessibleStudents();
+            if (currentUser && currentUser.role === 'walas') {
+                container.innerHTML = `
+                    <span class="px-3 py-1 text-xs font-semibold rounded-lg bg-blue-600 text-white">
+                        Kelas ${currentUser.kelas} (${accessible.length})
+                    </span>`;
+                return;
+            }
+
+            const selectedKelas = rekapSelect.value;
+            const allBtnClass = selectedKelas === ''
+                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100';
+
+            let html = `<button type="button" onclick="selectRekapKelas('')" class="px-3 py-1 text-xs font-semibold rounded-lg border transition cursor-pointer ${allBtnClass}">
+                Semua (${accessible.length})
+            </button>`;
+
+            kelasSet.forEach(k => {
+                const count = accessible.filter(s => s.kelas === k).length;
+                const active = selectedKelas === k
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100';
+                html += `<button type="button" onclick="selectRekapKelas('${k.replace(/'/g, "\\'")}')" class="px-3 py-1 text-xs font-semibold rounded-lg border transition cursor-pointer ${active}">
+                    ${k} (${count})
+                </button>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function selectRekapKelas(kls) {
+            const rekapSelect = document.getElementById('rekapFilterKelas');
+            if (rekapSelect) rekapSelect.value = kls;
+            const kelasSet = [...new Set(getAccessibleStudents().map(s => s.kelas).filter(Boolean))].sort();
+            renderRekapKelasButtons(kelasSet);
+            renderRekapTable();
+        }
+
+        function onRekapKelasDropdownChange(val) {
+            const kelasSet = [...new Set(getAccessibleStudents().map(s => s.kelas).filter(Boolean))].sort();
+            renderRekapKelasButtons(kelasSet);
+            renderRekapTable();
+        }
+
+        function getFilteredRekapStudents() {
+            const q = (document.getElementById('rekapSearchInput')?.value || '').toLowerCase();
+            const kls = document.getElementById('rekapFilterKelas')?.value || '';
+            return getAccessibleStudents().filter(s => {
+                const matchKelas = kls === '' || s.kelas === kls;
+                if (!matchKelas) return false;
+                if (!q) return true;
+                return (s.nama || '').toLowerCase().includes(q) ||
+                       (s.nis || '').toLowerCase().includes(q) ||
+                       (s.nisn || '').toLowerCase().includes(q) ||
+                       (s.alamat || '').toLowerCase().includes(q) ||
+                       (s.sekolah_asal || '').toLowerCase().includes(q) ||
+                       (s.nama_ayah || '').toLowerCase().includes(q) ||
+                       (s.nama_ibu || '').toLowerCase().includes(q);
+            });
+        }
+
+        function renderRekapTable() {
+            const tbody = document.getElementById('rekapTableBody');
+            const emptyState = document.getElementById('rekapEmptyState');
+            if (!tbody || !emptyState) return;
+
+            const tapelLbl = document.getElementById('rekapTapelLabel');
+            if (tapelLbl) tapelLbl.textContent = activeTapel;
+
+            const filtered = getFilteredRekapStudents();
+            const totalEl = document.getElementById('rekapTotalCount');
+            const maleEl = document.getElementById('rekapMaleCount');
+            const femaleEl = document.getElementById('rekapFemaleCount');
+            if (totalEl) totalEl.textContent = filtered.length;
+            if (maleEl) maleEl.textContent = filtered.filter(s => s.jk !== 'Perempuan').length;
+            if (femaleEl) femaleEl.textContent = filtered.filter(s => s.jk === 'Perempuan').length;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = filtered.map((s, idx) => `
+                <tr class="hover:bg-slate-50/90 transition">
+                    <td class="p-3 text-center text-slate-500 font-medium">${idx + 1}</td>
+                    <td class="p-3 whitespace-nowrap font-medium text-slate-900">${s.nis || '-'}</td>
+                    <td class="p-3 whitespace-nowrap text-slate-600">${s.nisn || '-'}</td>
+                    <td class="p-3 whitespace-nowrap font-semibold text-slate-900">${s.nama || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">
+                        <span class="inline-block whitespace-nowrap px-2 py-0.5 text-[11px] font-semibold rounded-md bg-blue-50 text-blue-700">${s.kelas || '-'}</span>
+                    </td>
+                    <td class="p-3 whitespace-nowrap">${s.jk || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.tempat_lahir || ''}, ${formatTanggalIndonesia(s.tgl_lahir)}</td>
+                    <td class="p-3 whitespace-nowrap">${s.agama || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.status_keluarga || '-'}</td>
+                    <td class="p-3 text-center">${s.anak_ke || '-'}</td>
+                    <td class="p-3">${s.alamat || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.telp || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.sekolah_asal || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.diterima_kelas || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${formatTanggalIndonesia(s.diterima_tgl) || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.nama_ayah || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.kerja_ayah || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.nama_ibu || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.kerja_ibu || '-'}</td>
+                    <td class="p-3">${s.alamat_ortu || s.alamat || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.telp_ortu || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.nama_wali || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.kerja_wali || '-'}</td>
+                    <td class="p-3">${s.alamat_wali || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">${s.telp_wali || '-'}</td>
+                    <td class="p-3 text-right whitespace-nowrap">
+                        <div class="inline-flex items-center gap-1">
+                            <button type="button" onclick="printSingle('${s.id}')" title="Cetak" class="p-1 text-blue-600 hover:bg-blue-50 rounded-md transition cursor-pointer">
+                                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button type="button" onclick="openEditModal('${s.id}')" title="Edit" class="p-1 text-amber-600 hover:bg-amber-50 rounded-md transition cursor-pointer">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            refreshIcons();
+        }
+
+        function exportRekapExcel() {
+            const list = getFilteredRekapStudents();
+            if (list.length === 0) {
+                showToast('Tidak ada data siswa untuk diekspor.');
+                return;
+            }
+            const kls = document.getElementById('rekapFilterKelas')?.value || 'Semua_Kelas';
+            const headers = [[
+                'NO', 'NIS', 'NISN', 'NAMA_PESERTA_DIDIK', 'KELAS', 'JENIS_KELAMIN',
+                'TEMPAT_LAHIR', 'TANGGAL_LAHIR', 'AGAMA', 'STATUS_KELUARGA',
+                'ANAK_KE', 'ALAMAT_SISWA', 'TELEPON_SISWA', 'SEKOLAH_ASAL',
+                'DITERIMA_KELAS', 'DITERIMA_TANGGAL', 'NAMA_AYAH', 'PEKERJAAN_AYAH',
+                'NAMA_IBU', 'PEKERJAAN_IBU', 'ALAMAT_ORTU', 'TELEPON_ORTU',
+                'NAMA_WALI', 'PEKERJAAN_WALI', 'ALAMAT_WALI', 'TELEPON_WALI'
+            ]];
+            const rows = list.map((s, idx) => [
+                idx + 1, s.nis || '', s.nisn || '', s.nama || '', s.kelas || '', s.jk || '',
+                s.tempat_lahir || '', formatTanggalIndonesia(s.tgl_lahir), s.agama || '', s.status_keluarga || '',
+                s.anak_ke || '', s.alamat || '', s.telp || '', s.sekolah_asal || '',
+                s.diterima_kelas || '', formatTanggalIndonesia(s.diterima_tgl), s.nama_ayah || '', s.kerja_ayah || '',
+                s.nama_ibu || '', s.kerja_ibu || '', s.alamat_ortu || s.alamat || '', s.telp_ortu || '',
+                s.nama_wali || '', s.kerja_wali || '', s.alamat_wali || '', s.telp_wali || ''
+            ]);
+            const ws = XLSX.utils.aoa_to_sheet([...headers, ...rows]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Data_Siswa');
+            const fileName = `Data_Siswa_${kls.replace(/[^a-zA-Z0-9_-]/g, '_')}_TA_${activeTapel.replace('/', '_')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            showToast(`Berhasil mengekspor ${list.length} data siswa!`);
         }
 
         function getFilteredStudents() {
@@ -1259,10 +1611,10 @@
                     </td>
                     <td class="p-3.5 font-medium text-slate-900">${s.nama}</td>
                     <td class="p-3.5">
-                        <span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700">${s.kelas}</span>
+                        <span class="inline-block whitespace-nowrap px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700">${s.kelas}</span>
                     </td>
                     <td class="p-3.5 hidden md:table-cell text-slate-600">${s.jk === 'Perempuan' ? 'P' : 'L'}</td>
-                    <td class="p-3.5 hidden lg:table-cell text-slate-600">${s.tempat_lahir}, ${s.tgl_lahir}</td>
+                    <td class="p-3.5 hidden lg:table-cell text-slate-600">${s.tempat_lahir}, ${formatTanggalIndonesia(s.tgl_lahir)}</td>
                     <td class="p-3.5 hidden xl:table-cell text-slate-600">${s.nama_ayah} / ${s.nama_ibu}</td>
                     <td class="p-3.5 text-right whitespace-nowrap">
                         <div class="inline-flex items-center gap-1">
@@ -1493,7 +1845,7 @@
 
         // --- NAVIGASI TAB ---
         function switchTab(tabName) {
-            ['siswa', 'sekolah', 'pengguna', 'spreadsheet', 'preview'].forEach(t => {
+            ['siswa', 'rekap', 'sekolah', 'pengguna', 'spreadsheet', 'preview'].forEach(t => {
                 const viewEl = document.getElementById(`view-${t}`);
                 const btn = document.getElementById(`tab-${t}`);
                 if (viewEl) viewEl.classList.add('hidden');
@@ -1510,6 +1862,9 @@
                 activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
             }
 
+            if (tabName === 'rekap') {
+                renderRekapTable();
+            }
             if (tabName === 'sekolah') {
                 loadSchoolForm();
                 if (gsConfig.webAppUrl && (!schoolData.logo_pemda || !schoolData.logo_sekolah)) {
@@ -1660,7 +2015,11 @@
             };
             fields.forEach(f => {
                 const el = document.getElementById(`f_${f}`);
-                obj[f] = el ? el.value : '';
+                let val = el ? el.value : '';
+                if (f === 'tgl_lahir' || f === 'diterima_tgl') {
+                    val = formatTanggalIndonesia(val);
+                }
+                obj[f] = val;
             });
             if (currentUser && currentUser.role === 'walas') {
                 obj.kelas = currentUser.kelas;
@@ -1681,6 +2040,7 @@
             localStorage.setItem('erapor_students', JSON.stringify(students));
             populateKelasFilter();
             renderTable();
+            renderRekapTable();
             closeModal('modalSiswa');
             await syncStudentsToSpreadsheet(activeTapel);
         }
@@ -1690,6 +2050,7 @@
             localStorage.setItem('erapor_students', JSON.stringify(students));
             populateKelasFilter();
             renderTable();
+            renderRekapTable();
             showToast('Data siswa berhasil dihapus.');
             await syncStudentsToSpreadsheet(activeTapel);
         }
@@ -1755,7 +2116,7 @@
                             kelas: String(r.KELAS || r['Kelas'] || 'VII-A'),
                             jk: String(r.JENIS_KELAMIN || r['Jenis Kelamin'] || 'Laki-laki'),
                             tempat_lahir: String(r.TEMPAT_LAHIR || r['Tempat Lahir'] || ''),
-                            tgl_lahir: String(r.TANGGAL_LAHIR || r['Tanggal Lahir'] || ''),
+                            tgl_lahir: formatTanggalIndonesia(r.TANGGAL_LAHIR || r['Tanggal Lahir'] || ''),
                             agama: String(r.AGAMA || r['Agama'] || 'Islam'),
                             status_keluarga: String(r.STATUS_KELUARGA || 'Anak Kandung'),
                             anak_ke: String(r.ANAK_KE || '1'),
@@ -1763,7 +2124,7 @@
                             telp: String(r.TELEPON_SISWA || '-'),
                             sekolah_asal: String(r.SEKOLAH_ASAL || r['Sekolah Asal'] || ''),
                             diterima_kelas: String(r.DITERIMA_KELAS || r.KELAS || 'VII-A'),
-                            diterima_tgl: String(r.DITERIMA_TANGGAL || '14 Juli 2025'),
+                            diterima_tgl: formatTanggalIndonesia(r.DITERIMA_TANGGAL || '14 Juli 2025'),
                             nama_ayah: String(r.NAMA_AYAH || r['Nama Ayah'] || ''),
                             nama_ibu: String(r.NAMA_IBU || r['Nama Ibu'] || ''),
                             alamat_ortu: String(r.ALAMAT_ORTU || r.ALAMAT_SISWA || ''),
@@ -1781,6 +2142,7 @@
                     localStorage.setItem('erapor_students', JSON.stringify(students));
                     populateKelasFilter();
                     renderTable();
+                    renderRekapTable();
                     closeModal('modalImport');
                     event.target.value = '';
                     showToast(`Berhasil mengimpor ${importedCount} data siswa ke TA ${activeTapel}!`);
@@ -1919,7 +2281,7 @@
                         <table class="biodata-table">
                             <tr><td style="width: 8.5mm;">1.</td><td style="width: 59mm;">Nama Peserta Didik (Lengkap)</td><td style="width: 4.5mm;">:</td><td style="font-weight: bold;">${s.nama}</td></tr>
                             <tr><td>2.</td><td>Nomor Induk / NISN</td><td>:</td><td>${s.nis}/ ${s.nisn}</td></tr>
-                            <tr><td>3.</td><td>Tempat, Tanggal Lahir</td><td>:</td><td>${s.tempat_lahir}, ${s.tgl_lahir}</td></tr>
+                            <tr><td>3.</td><td>Tempat, Tanggal Lahir</td><td>:</td><td>${s.tempat_lahir}, ${formatTanggalIndonesia(s.tgl_lahir)}</td></tr>
                             <tr><td>4.</td><td>Jenis Kelamin</td><td>:</td><td>${s.jk}</td></tr>
                             <tr><td>5.</td><td>Agama</td><td>:</td><td>${s.agama}</td></tr>
                             <tr><td>6.</td><td>Status dalam Keluarga</td><td>:</td><td>${s.status_keluarga}</td></tr>
@@ -1929,7 +2291,7 @@
                             <tr><td>10.</td><td>Sekolah Asal</td><td>:</td><td>${s.sekolah_asal}</td></tr>
                             <tr><td>11.</td><td colspan="3">Diterima di sekolah ini</td></tr>
                             <tr><td></td><td>Di kelas</td><td>:</td><td>${s.diterima_kelas || s.kelas}</td></tr>
-                            <tr><td></td><td>Pada tanggal</td><td>:</td><td>${s.diterima_tgl}</td></tr>
+                            <tr><td></td><td>Pada tanggal</td><td>:</td><td>${formatTanggalIndonesia(s.diterima_tgl)}</td></tr>
                             <tr><td>12.</td><td colspan="3">Nama Orang Tua</td></tr>
                             <tr><td></td><td>a. Ayah</td><td>:</td><td>${s.nama_ayah}</td></tr>
                             <tr><td></td><td>b. Ibu</td><td>:</td><td>${s.nama_ibu}</td></tr>
@@ -2221,13 +2583,14 @@
                         renderUserTable();
                     }
                     if (Array.isArray(data.students)) {
-                        students = data.students;
+                        students = data.students.map(normalizeStudentDates);
                         localStorage.setItem('erapor_students', JSON.stringify(students));
                         const tapels = [...new Set(students.map(s => s.tapel).filter(Boolean))];
                         tapels.forEach(t => ensureTapelOption(t));
                         ensureTapelOption(activeTapel);
                         populateKelasFilter();
                         renderTable();
+                        renderRekapTable();
                     }
                     if (!silent) showToast('Sinkronisasi dari Google Spreadsheet berhasil!');
                 } else {
@@ -2322,6 +2685,27 @@
                 '  "kerja_ibu", "alamat_ortu", "telp_ortu", "nama_wali", "alamat_wali", "telp_wali", "kerja_wali"',
                 '];',
                 '',
+                'const BULAN_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];',
+                'const EN_MONTH_MAP = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, mei: 4, jun: 5, jul: 6, aug: 7, agu: 7, sep: 8, oct: 9, okt: 9, nov: 10, dec: 11, des: 11 };',
+                '',
+                'function formatDateValue(val) {',
+                '  if (val === null || val === undefined || val === "") return "";',
+                '  if (val instanceof Date && !isNaN(val.getTime())) {',
+                '    const parts = Utilities.formatDate(val, "Asia/Jakarta", "dd-MM-yyyy").split("-");',
+                '    const mIdx = parseInt(parts[1], 10) - 1;',
+                '    return parts[0] + " " + BULAN_ID[mIdx] + " " + parts[2];',
+                '  }',
+                '  const str = String(val).trim();',
+                '  const jsMatch = str.match(/^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\s+([A-Za-z]{3})\\s+(\\d{1,2})\\s+(\\d{4})\\b/i);',
+                '  if (jsMatch) {',
+                '    const mIdx = EN_MONTH_MAP[jsMatch[1].toLowerCase()];',
+                '    if (mIdx !== undefined) {',
+                '      return ("0" + parseInt(jsMatch[2], 10)).slice(-2) + " " + BULAN_ID[mIdx] + " " + jsMatch[3];',
+                '    }',
+                '  }',
+                '  return str;',
+                '}',
+                '',
                 'function doGet(e) {',
                 '  const ss = SpreadsheetApp.getActiveSpreadsheet();',
                 '  const result = { status: "ok", school: {}, users: [], students: [] };',
@@ -2330,7 +2714,7 @@
                 '  const shSchool = ss.getSheetByName("Identitas_Sekolah");',
                 '  if (shSchool && shSchool.getLastRow() > 1) {',
                 '    const rows = shSchool.getRange(2, 1, shSchool.getLastRow() - 1, 2).getValues();',
-                '    rows.forEach(r => { if (r[0]) result.school[r[0]] = r[1]; });',
+                '    rows.forEach(r => { if (r[0]) result.school[r[0]] = (r[1] instanceof Date) ? formatDateValue(r[1]) : r[1]; });',
                 '  }',
                 '',
                 '  if (!folderId && result.school.logo_folder_id) {',
@@ -2357,7 +2741,11 @@
                 '      data.forEach(row => {',
                 '        if (!row[2]) return;',
                 '        const obj = {};',
-                '        STUDENT_HEADERS.forEach((h, i) => obj[h] = String(row[i] || ""));',
+                '        STUDENT_HEADERS.forEach((h, i) => {',
+                '          obj[h] = (h === "tgl_lahir" || h === "diterima_tgl" || row[i] instanceof Date)',
+                '            ? formatDateValue(row[i])',
+                '            : String(row[i] || "");',
+                '        });',
                 '        result.students.push(obj);',
                 '      });',
                 '    }',
@@ -2386,12 +2774,16 @@
                 '      }',
                 '      const sh = getOrCreateSheet(ss, "Identitas_Sekolah", ["Key", "Value"]);',
                 '      sh.clearContents();',
-                '      sh.appendRow(["Key", "Value"]);',
+                '      const schoolRows = [["Key", "Value"]];',
                 '      Object.keys(school).forEach(k => {',
                 '        if (k !== "logo_pemda" && k !== "logo_sekolah" && k !== "logo_pemda_base64" && k !== "logo_sekolah_base64") {',
-                '          sh.appendRow([k, school[k]]);',
+                '          schoolRows.push([k, String(school[k] || "")]);',
                 '        }',
                 '      });',
+                '      const sRange = sh.getRange(1, 1, schoolRows.length, 2);',
+                '      sRange.setNumberFormat("@");',
+                '      sRange.setValues(schoolRows);',
+                '      sh.getRange(1, 1, 1, 2).setFontWeight("bold");',
                 '      return jsonResponse({ status: "ok", school: school });',
                 '    }',
                 '',
@@ -2399,8 +2791,12 @@
                 '      const list = body.users || [];',
                 '      const sh = getOrCreateSheet(ss, "Pengguna", ["id", "nama", "role", "kelas", "username", "password"]);',
                 '      sh.clearContents();',
-                '      sh.appendRow(["id", "nama", "role", "kelas", "username", "password"]);',
-                '      list.forEach(u => sh.appendRow([u.id, u.nama, u.role, u.kelas, u.username, u.password]));',
+                '      const userRows = [["id", "nama", "role", "kelas", "username", "password"]];',
+                '      list.forEach(u => userRows.push([String(u.id || ""), String(u.nama || ""), String(u.role || ""), String(u.kelas || ""), String(u.username || ""), String(u.password || "")]));',
+                '      const uRange = sh.getRange(1, 1, userRows.length, 6);',
+                '      uRange.setNumberFormat("@");',
+                '      uRange.setValues(userRows);',
+                '      sh.getRange(1, 1, 1, 6).setFontWeight("bold");',
                 '      return jsonResponse({ status: "ok" });',
                 '    }',
                 '',
@@ -2410,10 +2806,16 @@
                 '      const list = body.students || [];',
                 '      const sh = getOrCreateSheet(ss, sheetName, STUDENT_HEADERS);',
                 '      sh.clearContents();',
-                '      sh.appendRow(STUDENT_HEADERS);',
+                '      const rows = [STUDENT_HEADERS];',
                 '      list.forEach(s => {',
-                '        sh.appendRow(STUDENT_HEADERS.map(h => s[h] || ""));',
+                '        rows.push(STUDENT_HEADERS.map(h => {',
+                '          return (h === "tgl_lahir" || h === "diterima_tgl") ? formatDateValue(s[h]) : String(s[h] || "");',
+                '        }));',
                 '      });',
+                '      const range = sh.getRange(1, 1, rows.length, STUDENT_HEADERS.length);',
+                '      range.setNumberFormat("@");',
+                '      range.setValues(rows);',
+                '      sh.getRange(1, 1, 1, STUDENT_HEADERS.length).setFontWeight("bold");',
                 '      return jsonResponse({ status: "ok", sheet: sheetName });',
                 '    }',
                 '',
