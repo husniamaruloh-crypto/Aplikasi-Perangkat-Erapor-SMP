@@ -1,0 +1,6 @@
+{
+  "name": "Aplikasi Cetak Perangkat e-Rapor SMP",
+  "description": "Sistem Cetak Sampul, Identitas Sekolah, Biodata Siswa & Mutasi e-Rapor SMP (A4).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
