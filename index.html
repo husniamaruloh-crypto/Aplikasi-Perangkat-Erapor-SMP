@@ -149,6 +149,12 @@
             }
         }
     </style>
+    <script type="module">
+        window.__VERCEL_GS_CONFIG__ = {
+            webAppUrl: import.meta.env.VITE_WEB_APP_URL || '',
+            logoFolderId: import.meta.env.VITE_LOGO_FOLDER_ID || ''
+        };
+    </script>
 </head>
 <body class="text-slate-800 antialiased">
 
@@ -733,6 +739,37 @@
                     </div>
                 </div>
 
+                <!-- Panduan Deploy Vercel agar Koneksi & Logo Tidak Hilang di Akun/Perangkat Lain -->
+                <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 space-y-3">
+                    <div class="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                            <h3 class="text-sm font-bold text-blue-950 flex items-center gap-1.5">
+                                <i data-lucide="globe" class="w-4 h-4 text-blue-600"></i>
+                                <span>Agar Link &amp; Logo Tidak Hilang Saat Deploy Vercel (Akun / Perangkat Lain)</span>
+                            </h3>
+                            <p class="text-xs text-blue-800 mt-1 leading-relaxed">
+                                Pengaturan pada form di atas tersimpan di memori browser (<code class="font-mono">localStorage</code>) perangkat ini. Supaya semua guru/siswa yang membuka link Vercel di perangkat atau akun berbeda langsung terhubung dan logo tampil otomatis, tambahkan <strong>Environment Variables</strong> di <strong>Vercel &rarr; Settings &rarr; Environment Variables</strong> lalu <strong>Redeploy</strong>:
+                            </p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                        <div class="bg-white border border-blue-200 rounded-xl p-3 flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="font-mono font-bold text-slate-800">VITE_WEB_APP_URL</div>
+                                <div class="text-[11px] text-slate-500 truncate" id="vercelEnvPreviewUrl">Isi dengan URL Web App (/exec)</div>
+                            </div>
+                            <button type="button" onclick="copyVercelEnvValue('url')" class="shrink-0 px-2.5 py-1.5 text-[11px] font-semibold bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition cursor-pointer">Salin URL</button>
+                        </div>
+                        <div class="bg-white border border-blue-200 rounded-xl p-3 flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="font-mono font-bold text-slate-800">VITE_LOGO_FOLDER_ID</div>
+                                <div class="text-[11px] text-slate-500 truncate" id="vercelEnvPreviewFolder">Isi dengan ID Folder Google Drive Logo</div>
+                            </div>
+                            <button type="button" onclick="copyVercelEnvValue('folder')" class="shrink-0 px-2.5 py-1.5 text-[11px] font-semibold bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition cursor-pointer">Salin ID</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Kode Google Apps Script Siap Salin -->
                 <div class="bg-slate-900 text-slate-100 rounded-2xl p-4 space-y-3">
                     <div class="flex items-center justify-between">
@@ -1232,11 +1269,57 @@
     </div>
 
     <script>
+        // --- KONFIGURASI BAWAAN DEPLOY (VERCEL / MULTI-PERANGKAT) ---
+        // Prioritas: Parameter URL -> localStorage -> Vercel Env (VITE_WEB_APP_URL / VITE_LOGO_FOLDER_ID) -> DEFAULT_GS_CONFIG -> Identitas Sekolah
+        const DEFAULT_GS_CONFIG = {
+            webAppUrl: 'https://script.google.com/macros/s/AKfycbyEZvCTmHrXlo4m1Hy90WUro8kZ81jH87-3OPvdZB8Rf0iGw0Lu_ueIic3kpqJNdC43Dg/exec',
+            logoFolderId: '11qCsv6jlTzRf4Jql3VMivIjPbNRSSB5T'
+        };
+
         // --- KONFIGURASI GOOGLE SPREADSHEET & DRIVE TERPISAH ---
         let gsConfig = JSON.parse(localStorage.getItem('erapor_gs_config')) || {
-            webAppUrl: '',
-            logoFolderId: ''
+            webAppUrl: DEFAULT_GS_CONFIG.webAppUrl,
+            logoFolderId: DEFAULT_GS_CONFIG.logoFolderId
         };
+
+        function hydrateDefaultGsConfig() {
+            const urlParams = new URLSearchParams(window.location.search || '');
+            const paramUrl = normalizeWebAppInput(urlParams.get('webapp') || urlParams.get('sid') || '');
+            const paramFolder = String(urlParams.get('folder') || '').trim();
+            const vercelCfg = window.__VERCEL_GS_CONFIG__ || {};
+            const vercelUrl = normalizeWebAppInput(vercelCfg.webAppUrl || '');
+            const vercelFolder = String(vercelCfg.logoFolderId || '').trim();
+            const codeDefaultUrl = normalizeWebAppInput(DEFAULT_GS_CONFIG.webAppUrl || '');
+            const codeDefaultFolder = String(DEFAULT_GS_CONFIG.logoFolderId || '').trim();
+
+            let changed = false;
+            if (paramUrl && paramUrl !== gsConfig.webAppUrl) {
+                gsConfig.webAppUrl = paramUrl;
+                changed = true;
+            }
+            if (paramFolder && paramFolder !== gsConfig.logoFolderId) {
+                gsConfig.logoFolderId = paramFolder;
+                changed = true;
+            }
+            if (!gsConfig.webAppUrl) {
+                const resolvedUrl = vercelUrl || codeDefaultUrl || normalizeWebAppInput(schoolData?.web_app_url || '');
+                if (resolvedUrl) {
+                    gsConfig.webAppUrl = resolvedUrl;
+                    changed = true;
+                }
+            }
+            if (!gsConfig.logoFolderId) {
+                const resolvedFolder = vercelFolder || codeDefaultFolder || String(schoolData?.logo_folder_id || '').trim();
+                if (resolvedFolder) {
+                    gsConfig.logoFolderId = resolvedFolder;
+                    changed = true;
+                }
+            }
+            if (changed) {
+                localStorage.setItem('erapor_gs_config', JSON.stringify(gsConfig));
+            }
+            return changed;
+        }
 
         let activeTapel = localStorage.getItem('erapor_active_tapel') || '2025/2026';
 
@@ -1257,8 +1340,8 @@
             kepsek: 'Tedy Mulyana, S.Pd.',
             nip_kepsek: '197207121995121002',
             titimangsa: 'Bekasi, 14 Juli 2025',
-            web_app_url: '',
-            logo_folder_id: '',
+            web_app_url: 'https://script.google.com/macros/s/AKfycbyEZvCTmHrXlo4m1Hy90WUro8kZ81jH87-3OPvdZB8Rf0iGw0Lu_ueIic3kpqJNdC43Dg/exec',
+            logo_folder_id: '11qCsv6jlTzRf4Jql3VMivIjPbNRSSB5T',
             logo_pemda: '',
             logo_sekolah: ''
         };
@@ -1457,13 +1540,13 @@
         }
 
         // --- INISIALISASI ---
+        document.addEventListener('DOMContentLoaded', () => {
+            hydrateDefaultGsConfig();
+            loadSpreadsheetConfigUI();
+        });
+
         window.onload = () => {
-            if (!gsConfig.webAppUrl && schoolData.web_app_url) {
-                gsConfig.webAppUrl = String(schoolData.web_app_url).trim();
-            }
-            if (!gsConfig.logoFolderId && schoolData.logo_folder_id) {
-                gsConfig.logoFolderId = String(schoolData.logo_folder_id).trim();
-            }
+            hydrateDefaultGsConfig();
             localStorage.setItem('erapor_gs_config', JSON.stringify(gsConfig));
 
             // Migrasi sekali jalan untuk akun siswa lokal yang sebelumnya memakai NISN sebagai kata sandi ke default 123456
@@ -1774,6 +1857,7 @@
 
         async function handleLogin(e) {
             e.preventDefault();
+            hydrateDefaultGsConfig();
             const selectedTapel = document.getElementById('loginTapel')?.value || activeTapel;
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
@@ -3670,7 +3754,34 @@
             if (folderEl) folderEl.value = gsConfig.logoFolderId || '';
             if (schUrlEl) schUrlEl.value = gsConfig.webAppUrl || schoolData.web_app_url || '';
             if (schFolderEl) schFolderEl.value = gsConfig.logoFolderId || schoolData.logo_folder_id || '';
+            const previewUrl = document.getElementById('vercelEnvPreviewUrl');
+            const previewFolder = document.getElementById('vercelEnvPreviewFolder');
+            if (previewUrl) previewUrl.textContent = gsConfig.webAppUrl || 'Isi dengan URL Web App (/exec)';
+            if (previewFolder) previewFolder.textContent = gsConfig.logoFolderId || 'Isi dengan ID Folder Google Drive Logo';
             updateConnectionBadge();
+        }
+
+        function copyVercelEnvValue(type) {
+            const val = type === 'url'
+                ? (document.getElementById('gs_webAppUrl')?.value.trim() || gsConfig.webAppUrl || '')
+                : (document.getElementById('gs_logoFolderId')?.value.trim() || gsConfig.logoFolderId || '');
+            if (!val) {
+                showToast(type === 'url' ? 'Isi URL Web App terlebih dahulu sebelum menyalin.' : 'Isi ID Folder Logo terlebih dahulu sebelum menyalin.');
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(val).then(() => {
+                    showToast((type === 'url' ? 'Nilai VITE_WEB_APP_URL' : 'Nilai VITE_LOGO_FOLDER_ID') + ' disalin!');
+                }).catch(() => {});
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = val;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast((type === 'url' ? 'Nilai VITE_WEB_APP_URL' : 'Nilai VITE_LOGO_FOLDER_ID') + ' disalin!');
+            }
         }
 
         function updateConnectionBadge() {
@@ -3854,6 +3965,10 @@
 
                     populateAllTapelDropdowns();
                     loadSchoolForm();
+                    if (currentUser && currentUser.role === 'admin') {
+                        const loggedInfo = document.getElementById('loggedUserInfo');
+                        if (loggedInfo) loggedInfo.textContent = `${currentUser.nama} • ${schoolData.nama}`;
+                    }
                     populateKelasFilter();
                     renderTable();
                     renderRekapTable();
@@ -3958,7 +4073,11 @@
                 '// GOOGLE APPS SCRIPT - DATABASE E-RAPOR SMP',
                 '// 1. Sheet siswa otomatis dibuat per Tahun Ajaran: Siswa_2025_2026, Siswa_2026_2027, dst.',
                 '// 2. Sheet Identitas_Sekolah, Periode_Tahun_Ajaran (Kepsek, NIP, Tanggal Rapor per TA), & Pengguna (per TA) otomatis disinkronkan.',
-                '// 3. File Logo Pemda & Logo Sekolah disimpan ke Folder Google Drive terpisah (logoFolderId).',
+                '// 3. File Logo Pemda & Logo Sekolah disimpan ke Folder Google Drive terpisah (DEFAULT_LOGO_FOLDER_ID / logoFolderId).',
+                '',
+                '// ISI ID FOLDER GOOGLE DRIVE LOGO & URL WEB APP DI SINI AGAR TERTANAM PERMANEN DI APPS SCRIPT:',
+                'const DEFAULT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyEZvCTmHrXlo4m1Hy90WUro8kZ81jH87-3OPvdZB8Rf0iGw0Lu_ueIic3kpqJNdC43Dg/exec";',
+                'const DEFAULT_LOGO_FOLDER_ID = "11qCsv6jlTzRf4Jql3VMivIjPbNRSSB5T";',
                 '',
                 'const STUDENT_HEADERS = [',
                 '  "id", "tapel", "nama", "nis", "nisn", "kelas", "jk", "tempat_lahir", "tgl_lahir",',
@@ -3973,6 +4092,12 @@
                 '',
                 'const BULAN_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];',
                 'const EN_MONTH_MAP = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, mei: 4, jun: 5, jul: 6, aug: 7, agu: 7, sep: 8, oct: 9, okt: 9, nov: 10, dec: 11, des: 11 };',
+                '',
+                'function getResolvedWebAppUrl(candidate) {',
+                '  const clean = String(candidate || DEFAULT_WEB_APP_URL || "").trim();',
+                '  if (clean) return clean;',
+                '  try { return ScriptApp.getService().getUrl() || ""; } catch (err) { return ""; }',
+                '}',
                 '',
                 'function formatDateValue(val) {',
                 '  if (val === null || val === undefined || val === "") return "";',
@@ -3995,15 +4120,16 @@
                 'function doGet(e) {',
                 '  const ss = SpreadsheetApp.getActiveSpreadsheet();',
                 '  const result = { status: "ok", school: {}, tapelPeriods: [], users: [], students: [] };',
-                '  let folderId = (e && e.parameter && e.parameter.logoFolderId) ? e.parameter.logoFolderId : "";',
+                '  let folderId = (e && e.parameter && e.parameter.logoFolderId) ? String(e.parameter.logoFolderId).trim() : "";',
                 '',
                 '  const shSchool = ss.getSheetByName("Identitas_Sekolah");',
                 '  if (shSchool && shSchool.getLastRow() > 1) {',
                 '    const rows = shSchool.getRange(2, 1, shSchool.getLastRow() - 1, 2).getValues();',
                 '    rows.forEach(r => { if (r[0]) result.school[r[0]] = (r[1] instanceof Date) ? formatDateValue(r[1]) : r[1]; });',
                 '  }',
-                '  if (!result.school.web_app_url) {',
-                '    try { result.school.web_app_url = ScriptApp.getService().getUrl() || ""; } catch (err) {}',
+                '  result.school.web_app_url = getResolvedWebAppUrl(result.school.web_app_url);',
+                '  if (!result.school.logo_folder_id && DEFAULT_LOGO_FOLDER_ID) {',
+                '    result.school.logo_folder_id = String(DEFAULT_LOGO_FOLDER_ID).trim();',
                 '  }',
                 '',
                 '  const shPeriods = ss.getSheetByName("Periode_Tahun_Ajaran");',
@@ -4020,11 +4146,11 @@
                 '    });',
                 '  }',
                 '',
-                '  if (!folderId && result.school.logo_folder_id) {',
-                '    folderId = result.school.logo_folder_id;',
+                '  if (!folderId) {',
+                '    folderId = String(result.school.logo_folder_id || DEFAULT_LOGO_FOLDER_ID || "").trim();',
                 '  }',
                 '',
-                '  // Ambil langsung file Logo dari folder Aset_logo agar selalu sinkron setiap login / buka ulang',
+                '  // Ambil langsung file Logo dari folder Drive agar selalu sinkron setiap login / buka ulang',
                 '  result.school.logo_pemda_base64 = readLogoAsDataUrl(folderId, "Logo_Pemda.png", result.school.logo_pemda_drive_url);',
                 '  result.school.logo_sekolah_base64 = readLogoAsDataUrl(folderId, "Logo_Sekolah.png", result.school.logo_sekolah_drive_url);',
                 '',
@@ -4074,18 +4200,20 @@
                 '    if (action === "saveConfig") {',
                 '      const sh = getOrCreateSheet(ss, "Identitas_Sekolah", ["Key", "Value"]);',
                 '      const cfg = {};',
-                '      if (body.webAppUrl) cfg.web_app_url = String(body.webAppUrl).trim();',
-                '      if (body.logoFolderId) cfg.logo_folder_id = String(body.logoFolderId).trim();',
+                '      const finalUrl = getResolvedWebAppUrl(body.webAppUrl);',
+                '      const finalFolder = String(body.logoFolderId || DEFAULT_LOGO_FOLDER_ID || "").trim();',
+                '      if (finalUrl) cfg.web_app_url = finalUrl;',
+                '      if (finalFolder) cfg.logo_folder_id = finalFolder;',
                 '      upsertKeyValueRows(sh, cfg);',
                 '      return jsonResponse({ status: "ok", config: cfg });',
                 '    }',
                 '',
                 '    if (action === "saveSchool") {',
                 '      const school = body.school || {};',
-                '      const folderId = body.logoFolderId || school.logo_folder_id || "";',
-                '      const webAppUrl = body.webAppUrl || school.web_app_url || "";',
+                '      const folderId = String(body.logoFolderId || school.logo_folder_id || DEFAULT_LOGO_FOLDER_ID || "").trim();',
+                '      const webAppUrl = getResolvedWebAppUrl(body.webAppUrl || school.web_app_url);',
                 '      if (folderId) {',
-                '        school.logo_folder_id = String(folderId).trim();',
+                '        school.logo_folder_id = folderId;',
                 '        if (school.logo_pemda && school.logo_pemda.startsWith("data:image")) {',
                 '          school.logo_pemda_drive_url = uploadLogoToSeparateDrive(folderId, "Logo_Pemda.png", school.logo_pemda);',
                 '        }',
@@ -4094,7 +4222,7 @@
                 '        }',
                 '      }',
                 '      if (webAppUrl) {',
-                '        school.web_app_url = String(webAppUrl).trim();',
+                '        school.web_app_url = webAppUrl;',
                 '      }',
                 '      const sh = getOrCreateSheet(ss, "Identitas_Sekolah", ["Key", "Value"]);',
                 '      sh.clearContents();',
@@ -4219,19 +4347,27 @@
                 '}',
                 '',
                 'function readLogoAsDataUrl(folderId, fileName, driveUrl) {',
-                '  try {',
-                '    let file = null;',
-                '    if (driveUrl) {',
-                '      const match = String(driveUrl).match(/[?&]id=([a-zA-Z0-9_-]+)/);',
+                '  let file = null;',
+                '  if (driveUrl) {',
+                '    try {',
+                '      const match = String(driveUrl).match(/[?&]id=([a-zA-Z0-9_-]+)/) || String(driveUrl).match(/\\/d\\/([a-zA-Z0-9_-]+)/);',
                 '      if (match && match[1]) {',
-                '        file = DriveApp.getFileById(match[1]);',
+                '        const candidate = DriveApp.getFileById(match[1]);',
+                '        if (candidate && !candidate.isTrashed()) file = candidate;',
                 '      }',
-                '    }',
-                '    if (!file && folderId) {',
+                '    } catch (err) { file = null; }',
+                '  }',
+                '  if (!file && folderId) {',
+                '    try {',
                 '      const folder = DriveApp.getFolderById(folderId);',
                 '      const files = folder.getFilesByName(fileName);',
-                '      if (files.hasNext()) file = files.next();',
-                '    }',
+                '      while (files.hasNext()) {',
+                '        const f = files.next();',
+                '        if (f && !f.isTrashed()) { file = f; break; }',
+                '      }',
+                '    } catch (err) { file = null; }',
+                '  }',
+                '  try {',
                 '    if (file && !file.isTrashed()) {',
                 '      const blob = file.getBlob();',
                 '      return "data:" + blob.getContentType() + ";base64," + Utilities.base64Encode(blob.getBytes());',
