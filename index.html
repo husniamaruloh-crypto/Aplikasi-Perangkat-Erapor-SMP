@@ -348,12 +348,25 @@
                         <select id="filterKelas" onchange="renderTable()" class="px-3.5 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
                             <option value="">Semua Kelas</option>
                         </select>
+                        <select id="filterVerifikasi" onchange="renderTable()" class="px-3.5 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Semua Verifikasi</option>
+                            <option value="verified">Sudah Terverifikasi</option>
+                            <option value="unverified">Belum Verifikasi</option>
+                        </select>
                         <div class="px-3 py-1.5 rounded-xl bg-slate-100 text-xs font-medium text-slate-600">
                             Sheet Aktif: <strong id="activeSheetLabel" class="text-indigo-700 font-mono">Siswa_2025_2026</strong>
                         </div>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800">
+                            <span>Terverifikasi:</span>
+                            <strong id="siswaVerifiedCount">0</strong>
+                        </div>
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-800">
+                            <span>Belum:</span>
+                            <strong id="siswaUnverifiedCount">0</strong>
+                        </div>
                         <button type="button" onclick="openAddModal()" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition cursor-pointer">
                             <i data-lucide="user-plus" class="w-4 h-4"></i>
                             <span>Tambah Siswa</span>
@@ -403,6 +416,7 @@
                                     <th class="p-3.5">NIS / NISN</th>
                                     <th class="p-3.5">Nama Peserta Didik</th>
                                     <th class="p-3.5">Kelas</th>
+                                    <th class="p-3.5">Verifikasi Siswa</th>
                                     <th class="p-3.5 hidden md:table-cell">L/P</th>
                                     <th class="p-3.5 hidden lg:table-cell">Tempat, Tgl Lahir</th>
                                     <th class="p-3.5 hidden xl:table-cell">Nama Orang Tua</th>
@@ -849,6 +863,12 @@
                             <span class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-rose-50 text-rose-700">
                                 Perempuan: <strong id="rekapFemaleCount">0</strong>
                             </span>
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Terverifikasi: <strong id="rekapVerifiedCount">0</strong>
+                            </span>
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-amber-50 text-amber-800 border border-amber-200">
+                                Belum Verifikasi: <strong id="rekapUnverifiedCount">0</strong>
+                            </span>
                             <button type="button" onclick="exportRekapExcel()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition cursor-pointer">
                                 <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                                 <span>Ekspor Excel</span>
@@ -902,8 +922,9 @@
                                     <th class="p-3 whitespace-nowrap">Telp Ortu</th>
                                     <th class="p-3 whitespace-nowrap">Nama Wali</th>
                                     <th class="p-3 whitespace-nowrap">Pekerjaan Wali</th>
-                                    <th class="p-3 min-w-[180px]">Alamat Wali</th>
+                                    <th class="p-3 whitespace-nowrap">Alamat Wali</th>
                                     <th class="p-3 whitespace-nowrap">Telp Wali</th>
+                                    <th class="p-3 whitespace-nowrap">Verifikasi Siswa</th>
                                     <th class="p-3 whitespace-nowrap text-right">Aksi</th>
                                 </tr>
                             </thead>
@@ -983,6 +1004,11 @@
                     <div class="text-xs text-slate-600 bg-sky-50 border border-sky-200 px-3 py-2 rounded-xl">
                         Jika ada kesalahan penulisan biodata, ajukan <strong>Usulan Perbaikan Data</strong> di bagian bawah halaman ini.
                     </div>
+                </div>
+
+                <!-- PANEL VERIFIKASI BIODATA OLEH SISWA (DI ATAS LEMBAR BIODATA) -->
+                <div id="studentVerificationCard" class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                    <!-- Dirender dinamis oleh JS -->
                 </div>
 
                 <div id="studentBiodataContainer" class="bg-slate-300/70 p-4 sm:p-8 rounded-2xl overflow-x-auto flex flex-col items-center">
@@ -1623,7 +1649,9 @@
                 ...s,
                 tgl_lahir: formatTanggalIndonesia(s.tgl_lahir),
                 diterima_tgl: formatTanggalIndonesia(s.diterima_tgl),
-                mutasi_tgl: formatTanggalIndonesia(s.mutasi_tgl)
+                mutasi_tgl: formatTanggalIndonesia(s.mutasi_tgl),
+                verifikasi_status: String(s.verifikasi_status || ''),
+                verifikasi_at: String(s.verifikasi_at || '')
             };
         }
 
@@ -2225,9 +2253,14 @@
             const totalEl = document.getElementById('rekapTotalCount');
             const maleEl = document.getElementById('rekapMaleCount');
             const femaleEl = document.getElementById('rekapFemaleCount');
+            const verifiedEl = document.getElementById('rekapVerifiedCount');
+            const unverifiedEl = document.getElementById('rekapUnverifiedCount');
+            const verifiedCnt = filtered.filter(s => s.verifikasi_status === 'Terverifikasi').length;
             if (totalEl) totalEl.textContent = filtered.length;
             if (maleEl) maleEl.textContent = filtered.filter(s => s.jk !== 'Perempuan').length;
             if (femaleEl) femaleEl.textContent = filtered.filter(s => s.jk === 'Perempuan').length;
+            if (verifiedEl) verifiedEl.textContent = verifiedCnt;
+            if (unverifiedEl) unverifiedEl.textContent = filtered.length - verifiedCnt;
 
             if (filtered.length === 0) {
                 tbody.innerHTML = '';
@@ -2265,6 +2298,12 @@
                     <td class="p-3 whitespace-nowrap">${s.kerja_wali || '-'}</td>
                     <td class="p-3">${s.alamat_wali || '-'}</td>
                     <td class="p-3 whitespace-nowrap">${s.telp_wali || '-'}</td>
+                    <td class="p-3 whitespace-nowrap">
+                        ${s.verifikasi_status === 'Terverifikasi'
+                            ? `<div><span class="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">✓ Terverifikasi</span>${s.verifikasi_at ? `<div class="text-[10px] text-slate-400 mt-0.5">${escapeHtmlText(s.verifikasi_at)}</div>` : ''}</div>`
+                            : `<span class="inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded-md bg-slate-100 text-slate-500">Belum Verifikasi</span>`
+                        }
+                    </td>
                     <td class="p-3 text-right whitespace-nowrap">
                         <div class="inline-flex items-center gap-1">
                             <button type="button" onclick="openMutasiModal('${s.id}')" title="Input Keterangan Pindah (Mutasi)" class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md transition cursor-pointer">
@@ -2297,7 +2336,8 @@
                 'DITERIMA_KELAS', 'DITERIMA_TANGGAL', 'NAMA_AYAH', 'PEKERJAAN_AYAH',
                 'NAMA_IBU', 'PEKERJAAN_IBU', 'ALAMAT_ORTU', 'TELEPON_ORTU',
                 'NAMA_WALI', 'PEKERJAAN_WALI', 'ALAMAT_WALI', 'TELEPON_WALI',
-                'TANGGAL_MUTASI', 'KELAS_DITINGGALKAN', 'ALASAN_MUTASI', 'ORTU_MUTASI'
+                'TANGGAL_MUTASI', 'KELAS_DITINGGALKAN', 'ALASAN_MUTASI', 'ORTU_MUTASI',
+                'STATUS_VERIFIKASI_SISWA', 'WAKTU_VERIFIKASI'
             ]];
             const rows = list.map((s, idx) => [
                 idx + 1, s.nis || '', s.nisn || '', s.nama || '', s.kelas || '', s.jk || '',
@@ -2306,7 +2346,8 @@
                 s.diterima_kelas || '', formatTanggalIndonesia(s.diterima_tgl), s.nama_ayah || '', s.kerja_ayah || '',
                 s.nama_ibu || '', s.kerja_ibu || '', s.alamat_ortu || s.alamat || '', s.telp_ortu || '',
                 s.nama_wali || '', s.kerja_wali || '', s.alamat_wali || '', s.telp_wali || '',
-                formatTanggalIndonesia(s.mutasi_tgl), s.mutasi_kelas || '', s.mutasi_alasan || '', s.mutasi_ortu || ''
+                formatTanggalIndonesia(s.mutasi_tgl), s.mutasi_kelas || '', s.mutasi_alasan || '', s.mutasi_ortu || '',
+                s.verifikasi_status === 'Terverifikasi' ? 'Terverifikasi' : 'Belum Verifikasi', s.verifikasi_at || ''
             ]);
             const ws = XLSX.utils.aoa_to_sheet([...headers, ...rows]);
             const wb = XLSX.utils.book_new();
@@ -2319,18 +2360,30 @@
         function getFilteredStudents() {
             const q = document.getElementById('searchInput').value.toLowerCase();
             const kls = document.getElementById('filterKelas').value;
+            const verif = document.getElementById('filterVerifikasi')?.value || '';
             return getAccessibleStudents().filter(s => {
                 const matchText = (s.nama || '').toLowerCase().includes(q) ||
                                   (s.nis || '').toLowerCase().includes(q) ||
                                   (s.nisn || '').toLowerCase().includes(q);
                 const matchKelas = kls === '' || s.kelas === kls;
-                return matchText && matchKelas;
+                const isVerified = s.verifikasi_status === 'Terverifikasi';
+                const matchVerif = verif === '' || (verif === 'verified' ? isVerified : !isVerified);
+                return matchText && matchKelas && matchVerif;
             });
         }
 
         function renderTable() {
             const tbody = document.getElementById('siswaTableBody');
             const emptyState = document.getElementById('emptyState');
+
+            const kls = document.getElementById('filterKelas')?.value || '';
+            const classScoped = getAccessibleStudents().filter(s => kls === '' || s.kelas === kls);
+            const verifiedCount = classScoped.filter(s => s.verifikasi_status === 'Terverifikasi').length;
+            const vEl = document.getElementById('siswaVerifiedCount');
+            const uEl = document.getElementById('siswaUnverifiedCount');
+            if (vEl) vEl.textContent = verifiedCount;
+            if (uEl) uEl.textContent = classScoped.length - verifiedCount;
+
             const filtered = getFilteredStudents();
 
             if (filtered.length === 0) {
@@ -2342,6 +2395,10 @@
 
             emptyState.classList.add('hidden');
             tbody.innerHTML = filtered.map(s => {
+                const hasPendingCorr = corrections.some(c =>
+                    c.status === 'Menunggu' &&
+                    (c.student_id === s.id || (s.nisn && String(c.nisn || '').trim() === String(s.nisn).trim() && (c.tapel || activeTapel) === (s.tapel || activeTapel)))
+                );
                 return `
                 <tr class="hover:bg-slate-50/90 transition">
                     <td class="p-3.5 text-center">
@@ -2354,6 +2411,18 @@
                     <td class="p-3.5 font-medium text-slate-900">${s.nama}</td>
                     <td class="p-3.5">
                         <span class="inline-block whitespace-nowrap px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700">${s.kelas}</span>
+                    </td>
+                    <td class="p-3.5 whitespace-nowrap">
+                        ${s.verifikasi_status === 'Terverifikasi'
+                            ? `<div>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-100 text-emerald-800">✓ Terverifikasi</span>
+                                ${s.verifikasi_at ? `<div class="text-[10px] text-slate-400 mt-0.5">${escapeHtmlText(s.verifikasi_at)}</div>` : ''}
+                               </div>`
+                            : `<div>
+                                <span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 text-slate-600">Belum Verifikasi</span>
+                                ${hasPendingCorr ? `<div class="text-[10px] font-semibold text-amber-700 mt-0.5">Ada usulan perbaikan</div>` : ''}
+                               </div>`
+                        }
                     </td>
                     <td class="p-3.5 hidden md:table-cell text-slate-600">${s.jk === 'Perempuan' ? 'P' : 'L'}</td>
                     <td class="p-3.5 hidden lg:table-cell text-slate-600">${s.tempat_lahir}, ${formatTanggalIndonesia(s.tgl_lahir)}</td>
@@ -2436,6 +2505,7 @@
             const studentObj = getCurrentLoggedStudent();
 
             if (!studentObj) {
+                renderStudentVerificationCard(null);
                 container.innerHTML = '<div class="p-8 text-center text-slate-600 bg-white rounded-xl">Data biodata siswa belum tersedia atau sedang disinkronkan.</div>';
                 return;
             }
@@ -2444,6 +2514,7 @@
                 metaEl.textContent = `${studentObj.nama} • NIS / NISN: ${studentObj.nis || '-'} / ${studentObj.nisn || '-'} • Kelas ${studentObj.kelas || '-'} • TA ${studentObj.tapel || activeTapel}`;
             }
 
+            renderStudentVerificationCard(studentObj);
             container.innerHTML = generateDocumentsHTML([studentObj], {
                 cover: false,
                 sekolah: false,
@@ -2454,6 +2525,152 @@
             renderStudentCorrectionFields(studentObj);
             renderStudentCorrectionHistory(studentObj);
             refreshIcons();
+        }
+
+        function scrollToStudentCorrection() {
+            const target = document.getElementById('studentCorrectionSection');
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function updateStudentVerifyButtonState() {
+            const chk = document.getElementById('studentVerifyAgreeCheckbox');
+            const btn = document.getElementById('btnVerifyStudentBiodata');
+            if (!chk || !btn) return;
+            if (chk.checked) {
+                btn.classList.remove('bg-slate-400', 'hover:bg-slate-500');
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700', 'shadow-sm');
+            } else {
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'shadow-sm');
+                btn.classList.add('bg-slate-400', 'hover:bg-slate-500');
+            }
+        }
+
+        function renderStudentVerificationCard(studentObj) {
+            const card = document.getElementById('studentVerificationCard');
+            if (!card) return;
+            if (!studentObj) {
+                card.classList.add('hidden');
+                card.innerHTML = '';
+                return;
+            }
+            card.classList.remove('hidden');
+
+            const isVerified = studentObj.verifikasi_status === 'Terverifikasi';
+            if (isVerified) {
+                card.className = 'bg-emerald-50/90 p-4 sm:p-5 rounded-2xl shadow-sm border border-emerald-200 space-y-3';
+                card.innerHTML = `
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                                <i data-lucide="badge-check" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="text-sm sm:text-base font-bold text-emerald-950">Biodata Sudah Diverifikasi</h3>
+                                    <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-emerald-200/80 text-emerald-900">Terverifikasi</span>
+                                </div>
+                                <p class="text-xs text-emerald-800 mt-1">
+                                    Anda telah menyatakan bahwa seluruh data pada lembar biodata rapor di bawah ini sudah benar dan sesuai dokumen resmi${studentObj.verifikasi_at ? ` (${escapeHtmlText(studentObj.verifikasi_at)})` : ''}.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="scrollToStudentCorrection()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-blue-700 bg-white hover:bg-blue-50 border border-blue-200 rounded-xl transition cursor-pointer">
+                                <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
+                                <span>Usulan Perbaikan</span>
+                            </button>
+                            <button type="button" onclick="unverifyCurrentStudentBiodata()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl transition cursor-pointer">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                <span>Batalkan Verifikasi</span>
+                            </button>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            card.className = 'bg-amber-50/80 p-4 sm:p-5 rounded-2xl shadow-sm border border-amber-200 space-y-3.5';
+            card.innerHTML = `
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="text-sm sm:text-base font-bold text-slate-900">Verifikasi Kebenaran Data Biodata</h3>
+                                <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-amber-200 text-amber-900">Belum Diverifikasi</span>
+                            </div>
+                            <p class="text-xs text-slate-700 mt-1">
+                                Periksa seluruh isi lembar biodata rapor di bawah ini dengan saksama. Apabila masih terdapat data yang keliru atau perlu diperbaiki, <strong>jangan klik tombol Verifikasi terlebih dahulu</strong> — silakan gulir ke bawah ke menu <strong>Usulan Perbaikan Data Biodata</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-amber-200 rounded-xl p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                    <label for="studentVerifyAgreeCheckbox" class="flex items-start gap-2.5 cursor-pointer select-none">
+                        <input type="checkbox" id="studentVerifyAgreeCheckbox" onchange="updateStudentVerifyButtonState()" class="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0">
+                        <span class="text-xs sm:text-sm font-medium text-slate-800">
+                            <strong>Pernyataan:</strong> Saya menyatakan bahwa seluruh data pada lembar biodata rapor di bawah ini <strong>sudah benar</strong>, lengkap, dan sesuai dengan dokumen resmi (Kartu Keluarga / Akta Kelahiran).
+                        </span>
+                    </label>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <button type="button" onclick="scrollToStudentCorrection()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition cursor-pointer">
+                            <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
+                            <span>Perbaiki Data Dulu</span>
+                        </button>
+                        <button type="button" id="btnVerifyStudentBiodata" onclick="verifyCurrentStudentBiodata()" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-slate-400 hover:bg-slate-500 rounded-xl transition cursor-pointer">
+                            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                            <span>Verifikasi Data Sudah Benar</span>
+                        </button>
+                    </div>
+                </div>`;
+        }
+
+        async function verifyCurrentStudentBiodata() {
+            const studentObj = getCurrentLoggedStudent();
+            if (!studentObj) {
+                showToast('Data biodata siswa belum ditemukan.');
+                return;
+            }
+            const chk = document.getElementById('studentVerifyAgreeCheckbox');
+            if (!chk || !chk.checked) {
+                showToast('Centang pernyataan bahwa data sudah benar terlebih dahulu sebelum klik Verifikasi.');
+                if (chk) chk.focus();
+                return;
+            }
+            const nowStr = formatTimestampID();
+            const idx = students.findIndex(s => s.id === studentObj.id);
+            if (idx === -1) return;
+            students[idx] = {
+                ...students[idx],
+                verifikasi_status: 'Terverifikasi',
+                verifikasi_at: nowStr
+            };
+            localStorage.setItem('erapor_students', JSON.stringify(students));
+            renderStudentVerificationCard(students[idx]);
+            refreshIcons();
+            showToast('Terima kasih! Biodata Anda berhasil diverifikasi.');
+            await verifyStudentBiodataInSpreadsheet(students[idx]);
+        }
+
+        async function unverifyCurrentStudentBiodata() {
+            const studentObj = getCurrentLoggedStudent();
+            if (!studentObj) return;
+            const idx = students.findIndex(s => s.id === studentObj.id);
+            if (idx === -1) return;
+            students[idx] = {
+                ...students[idx],
+                verifikasi_status: '',
+                verifikasi_at: ''
+            };
+            localStorage.setItem('erapor_students', JSON.stringify(students));
+            renderStudentVerificationCard(students[idx]);
+            refreshIcons();
+            showToast('Status verifikasi dibatalkan. Silakan periksa atau ajukan perbaikan di bawah.');
+            await verifyStudentBiodataInSpreadsheet(students[idx]);
         }
 
         const CORRECTION_FIELD_OPTIONS = [
@@ -2670,6 +2887,19 @@
             corrections.unshift(newCorrection);
             localStorage.setItem('erapor_corrections', JSON.stringify(corrections));
 
+            const stdIdx = students.findIndex(s => s.id === studentObj.id);
+            let clearedVerification = false;
+            if (stdIdx > -1 && students[stdIdx].verifikasi_status === 'Terverifikasi') {
+                students[stdIdx] = {
+                    ...students[stdIdx],
+                    verifikasi_status: '',
+                    verifikasi_at: ''
+                };
+                localStorage.setItem('erapor_students', JSON.stringify(students));
+                clearedVerification = true;
+                renderStudentVerificationCard(students[stdIdx]);
+            }
+
             const btn = document.getElementById('btnSubmitCorrection');
             if (btn) btn.disabled = true;
             resetStudentCorrectionFilter();
@@ -2677,6 +2907,9 @@
             updatePendingCorrectionBadge();
 
             await upsertCorrectionToSpreadsheet(newCorrection);
+            if (clearedVerification && stdIdx > -1) {
+                await verifyStudentBiodataInSpreadsheet(students[stdIdx]);
+            }
             if (btn) btn.disabled = false;
             showToast('Usulan perbaikan berhasil dikirim! Menunggu input manual oleh Wali Kelas / Admin.');
         }
@@ -3747,10 +3980,14 @@
                 const idx = students.findIndex(s => s.id === id);
                 if (idx > -1) {
                     obj.tapel = students[idx].tapel || activeTapel;
+                    obj.verifikasi_status = students[idx].verifikasi_status || '';
+                    obj.verifikasi_at = students[idx].verifikasi_at || '';
                     students[idx] = obj;
                 }
                 showToast('Data peserta didik diperbarui!');
             } else {
+                obj.verifikasi_status = '';
+                obj.verifikasi_at = '';
                 students.push(obj);
                 showToast('Peserta didik baru ditambahkan!');
             }
@@ -4711,6 +4948,22 @@
             }
         }
 
+        async function verifyStudentBiodataInSpreadsheet(studentObj) {
+            if (!gsConfig.webAppUrl || !studentObj) return;
+            try {
+                await callAppsScript('verifyStudentBiodata', {
+                    tapel: studentObj.tapel || activeTapel,
+                    student_id: studentObj.id || '',
+                    nis: studentObj.nis || '',
+                    nisn: studentObj.nisn || '',
+                    verifikasi_status: studentObj.verifikasi_status || '',
+                    verifikasi_at: studentObj.verifikasi_at || ''
+                });
+            } catch (err) {
+                console.error('Gagal sync status verifikasi siswa:', err);
+            }
+        }
+
         async function upsertCorrectionToSpreadsheet(correctionObj) {
             if (!gsConfig.webAppUrl || !correctionObj) return;
             try {
@@ -4801,7 +5054,7 @@
                 '  "agama", "status_keluarga", "anak_ke", "alamat", "telp", "sekolah_asal",',
                 '  "diterima_kelas", "diterima_tgl", "nama_ayah", "kerja_ayah", "nama_ibu",',
                 '  "kerja_ibu", "alamat_ortu", "telp_ortu", "nama_wali", "alamat_wali", "telp_wali", "kerja_wali",',
-                '  "mutasi_tgl", "mutasi_kelas", "mutasi_alasan", "mutasi_ortu"',
+                '  "mutasi_tgl", "mutasi_kelas", "mutasi_alasan", "mutasi_ortu", "verifikasi_status", "verifikasi_at"',
                 '];',
                 '',
                 'const PERIOD_HEADERS = ["tapel", "kepsek", "nip_kepsek", "titimangsa"];',
@@ -5021,17 +5274,60 @@
                 '      return jsonResponse({ status: "ok", sheet: sheetName });',
                 '    }',
                 '',
-                '    if (action === "upsertCorrection") {',
-                '      const corr = body.correction || {};',
-                '      const current = readCorrectionsSheet(ss);',
-                '      const idx = current.findIndex(c => String(c.id) === String(corr.id));',
-                '      if (idx > -1) {',
-                '        current[idx] = corr;',
-                '      } else {',
-                '        current.unshift(corr);',
+    '    if (action === "verifyStudentBiodata") {',
+                '      const lock = LockService.getScriptLock();',
+                '      lock.waitLock(10000);',
+                '      try {',
+                '        const tapel = body.tapel || "2025/2026";',
+                '        const sheetName = "Siswa_" + tapel.replace(/[^a-zA-Z0-9]/g, "_");',
+                '        const sh = getOrCreateSheet(ss, sheetName, STUDENT_HEADERS);',
+                '        if (sh.getLastColumn() < STUDENT_HEADERS.length) {',
+                '          sh.getRange(1, 1, 1, STUDENT_HEADERS.length).setValues([STUDENT_HEADERS]).setFontWeight("bold");',
+                '        }',
+                '        const statusCol = STUDENT_HEADERS.indexOf("verifikasi_status") + 1;',
+                '        const atCol = STUDENT_HEADERS.indexOf("verifikasi_at") + 1;',
+                '        const lastRow = sh.getLastRow();',
+                '        let updated = false;',
+                '        if (lastRow > 1) {',
+                '          const idsAndNisn = sh.getRange(2, 1, lastRow - 1, 5).getValues();',
+                '          const targetId = String(body.student_id || "").trim();',
+                '          const targetNis = String(body.nis || "").trim();',
+                '          const targetNisn = String(body.nisn || "").trim();',
+                '          for (let i = 0; i < idsAndNisn.length; i++) {',
+                '            const rowId = String(idsAndNisn[i][0] || "").trim();',
+                '            const rowNis = String(idsAndNisn[i][3] || "").trim();',
+                '            const rowNisn = String(idsAndNisn[i][4] || "").trim();',
+                '            if ((targetId && rowId === targetId) || (targetNisn && rowNisn === targetNisn) || (targetNis && rowNis === targetNis)) {',
+                '              sh.getRange(i + 2, statusCol).setNumberFormat("@").setValue(String(body.verifikasi_status || ""));',
+                '              sh.getRange(i + 2, atCol).setNumberFormat("@").setValue(String(body.verifikasi_at || ""));',
+                '              updated = true;',
+                '              break;',
+                '            }',
+                '          }',
+                '        }',
+                '        return jsonResponse({ status: "ok", updated: updated });',
+                '      } finally {',
+                '        lock.releaseLock();',
                 '      }',
-                '      writeCorrectionsSheet(ss, current);',
-                '      return jsonResponse({ status: "ok", corrections: current });',
+                '    }',
+                '',
+                '    if (action === "upsertCorrection") {',
+                '      const lock = LockService.getScriptLock();',
+                '      lock.waitLock(10000);',
+                '      try {',
+                '        const corr = body.correction || {};',
+                '        const current = readCorrectionsSheet(ss);',
+                '        const idx = current.findIndex(c => String(c.id) === String(corr.id));',
+                '        if (idx > -1) {',
+                '          current[idx] = corr;',
+                '        } else {',
+                '          current.unshift(corr);',
+                '        }',
+                '        writeCorrectionsSheet(ss, current);',
+                '        return jsonResponse({ status: "ok", corrections: current });',
+                '      } finally {',
+                '        lock.releaseLock();',
+                '      }',
                 '    }',
                 '',
                 '    if (action === "deleteCorrection") {',
