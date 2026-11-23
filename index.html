@@ -303,6 +303,13 @@
                             <i data-lucide="table-2" class="w-4 h-4 shrink-0"></i>
                             <span>Tabel Data Per Kelas</span>
                         </button>
+                        <button type="button" onclick="switchTab('usulan')" id="tab-usulan" class="tab-btn w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm font-semibold rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition cursor-pointer text-left">
+                            <span class="flex items-center gap-3 min-w-0">
+                                <i data-lucide="clipboard-edit" class="w-4 h-4 shrink-0"></i>
+                                <span class="truncate">Usulan Perbaikan</span>
+                            </span>
+                            <span id="pendingCorrectionBadge" class="hidden px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800 shrink-0">0</span>
+                        </button>
                         <button type="button" onclick="switchTab('sekolah')" id="tab-sekolah" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-semibold rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition cursor-pointer text-left">
                             <i data-lucide="building-2" class="w-4 h-4 shrink-0"></i>
                             <span>Identitas Sekolah & Logo</span>
@@ -912,8 +919,59 @@
                 </div>
             </section>
 
-            <!-- TAMPILAN KHUSUS SISWA: LIHAT BIODATA RAPOR SAJA -->
-            <section id="view-student-biodata" class="hidden space-y-4">
+            <!-- TAB 7: USULAN PERBAIKAN BIODATA DARI SISWA (ADMIN & WALI KELAS) -->
+            <section id="view-usulan" class="hidden space-y-4">
+                <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h2 class="text-base sm:text-lg font-bold text-slate-900">Usulan Perbaikan Biodata dari Siswa</h2>
+                                <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">TA <span id="usulanTapelLabel">2025/2026</span></span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Usulan siswa <strong>tidak otomatis mengubah biodata rapor</strong>. Klik <strong>Edit Biodata Siswa</strong> untuk menginput perbaikan secara manual setelah verifikasi, lalu tandai selesai.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-amber-50 text-amber-800 border border-amber-200">
+                                Menunggu: <strong id="usulanPendingCount">0</strong>
+                            </span>
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Selesai: <strong id="usulanDoneCount">0</strong>
+                            </span>
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-rose-50 text-rose-700 border border-rose-200">
+                                Ditolak: <strong id="usulanRejectedCount">0</strong>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row md:items-center gap-3 pt-2 border-t border-slate-100">
+                        <div class="relative flex-1 max-w-md">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5"></i>
+                            <input type="text" id="usulanSearchInput" oninput="renderUsulanTable()" placeholder="Cari nama siswa, NISN, atau bagian data..." class="w-full pl-10 pr-4 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <select id="usulanFilterKelas" onchange="renderUsulanTable()" class="px-3.5 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Semua Kelas</option>
+                        </select>
+                        <select id="usulanFilterStatus" onchange="renderUsulanTable()" class="px-3.5 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">Semua Status</option>
+                            <option value="Menunggu">Menunggu</option>
+                            <option value="Selesai">Selesai</option>
+                            <option value="Ditolak">Ditolak</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="usulanListContainer" class="space-y-3">
+                    <!-- Kartu usulan perbaikan dari siswa dirender di sini -->
+                </div>
+
+                <div id="usulanEmptyState" class="hidden bg-white rounded-2xl border border-slate-200 py-12 text-center">
+                    <i data-lucide="clipboard-check" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+                    <p class="text-slate-500 font-medium">Belum ada usulan perbaikan biodata dari siswa pada filter ini.</p>
+                </div>
+            </section>
+
+            <!-- TAMPILAN KHUSUS SISWA: LIHAT BIODATA RAPOR SAJA + USULAN PERBAIKAN -->
+            <section id="view-student-biodata" class="hidden space-y-5">
                 <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
@@ -922,13 +980,81 @@
                         </div>
                         <p id="studentBiodataMeta" class="text-xs text-slate-500 mt-1">Menampilkan lembar biodata resmi e-Rapor Anda (Kertas A4).</p>
                     </div>
-                    <div class="text-xs text-slate-500 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl">
-                        Jika ada kesalahan penulisan biodata, silakan hubungi Wali Kelas atau Operator Sekolah.
+                    <div class="text-xs text-slate-600 bg-sky-50 border border-sky-200 px-3 py-2 rounded-xl">
+                        Jika ada kesalahan penulisan biodata, ajukan <strong>Usulan Perbaikan Data</strong> di bagian bawah halaman ini.
                     </div>
                 </div>
 
                 <div id="studentBiodataContainer" class="bg-slate-300/70 p-4 sm:p-8 rounded-2xl overflow-x-auto flex flex-col items-center">
                     <!-- Lembar biodata rapor siswa dirender di sini -->
+                </div>
+
+                <!-- PANEL USULAN PERBAIKAN DATA OLEH SISWA -->
+                <div id="studentCorrectionSection" class="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-5">
+                    <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <i data-lucide="clipboard-edit" class="w-5 h-5 text-blue-600"></i>
+                                <span>Usulan Perbaikan Data Biodata</span>
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Centang bagian biodata yang ingin diperbaiki (boleh pilih lebih dari 1). Data usulan <strong>tidak langsung mengubah rapor</strong> dan akan diinput secara manual oleh Wali Kelas atau Admin setelah diverifikasi.
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="studentSelectedFieldsBadge" class="px-3 py-1 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 border border-blue-200">Dipilih: 0 bagian</span>
+                            <button type="button" onclick="resetStudentCorrectionFilter()" class="px-3 py-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
+                                Reset Pilihan
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Langkah 1: Filter Pilihan Kolom yang Mau Diubah (Multi-Pilih) -->
+                    <div class="space-y-2.5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-600">1. Pilih Bagian Data yang Ingin Diubah (Boleh Lebih dari 1)</label>
+                            <input type="text" id="studentCorrectionFilterSearch" oninput="renderStudentCorrectionFilter()" placeholder="Cari bagian data (misal: nama, ayah, alamat)..." class="px-3 py-1.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none sm:w-64">
+                        </div>
+                        <div id="studentCorrectionFilterGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                            <!-- Checkbox pilihan kolom dirender oleh JS -->
+                        </div>
+                    </div>
+
+                    <!-- Langkah 2: Form Isian Sesuai Filter yang Dipilih -->
+                    <form id="studentCorrectionForm" onsubmit="submitStudentCorrection(event)" class="hidden space-y-4 pt-4 border-t border-slate-200">
+                        <div>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">2. Isi Perbaikan Data yang Benar</h4>
+                            <div id="studentCorrectionFieldsContainer" class="space-y-3">
+                                <!-- Input perbandingan data saat ini vs usulan perbaikan -->
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="studentCorrectionNote" class="block text-xs font-semibold text-slate-700 mb-1">Keterangan / Dasar Perbaikan (Opsional)</label>
+                            <textarea id="studentCorrectionNote" rows="2" placeholder="Contoh: Penulisan nama dan tanggal lahir disesuaikan dengan Kartu Keluarga / Akta Kelahiran terbaru" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                            <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg">
+                                Perubahan tidak otomatis tersimpan ke biodata rapor sebelum diinput oleh Wali Kelas / Admin.
+                            </p>
+                            <button type="submit" id="btnSubmitCorrection" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition cursor-pointer">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                <span>Kirim Usulan Perbaikan</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Langkah 3: Riwayat Usulan Perbaikan Siswa -->
+                    <div class="pt-4 border-t border-slate-200 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600">Riwayat Usulan Perbaikan Saya</h4>
+                            <span id="studentCorrectionHistoryCount" class="text-xs font-semibold text-slate-500">0 usulan</span>
+                        </div>
+                        <div id="studentCorrectionHistoryList" class="space-y-2.5">
+                            <!-- Riwayat usulan siswa dirender oleh JS -->
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
@@ -949,6 +1075,15 @@
             </div>
             <form id="siswaForm" onsubmit="saveSiswaData(event)" class="p-6 overflow-y-auto space-y-5 text-sm">
                 <input type="hidden" id="edit_id">
+                <div id="correctionReferenceBanner" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                            <i data-lucide="clipboard-edit" class="w-4 h-4 text-amber-700"></i>
+                            <span>Referensi Usulan Perbaikan dari Siswa (Edit Manual pada Form di Bawah)</span>
+                        </span>
+                    </div>
+                    <div id="correctionReferenceContent" class="text-xs text-slate-700 space-y-1"></div>
+                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="sm:col-span-2">
                         <label class="block text-xs font-semibold text-slate-700 mb-1">1. Nama Peserta Didik (Lengkap) *</label>
@@ -1500,9 +1635,44 @@
             };
         }
 
+        function normalizeCorrectionRecord(c) {
+            if (!c) return c;
+            let items = [];
+            if (Array.isArray(c.items)) {
+                items = c.items;
+            } else if (typeof c.fields_json === 'string' && c.fields_json.trim()) {
+                try {
+                    const parsed = JSON.parse(c.fields_json);
+                    if (Array.isArray(parsed)) items = parsed;
+                } catch (e) {}
+            }
+            return {
+                id: String(c.id || ('corr_' + Date.now())),
+                tapel: String(c.tapel || '2025/2026'),
+                student_id: String(c.student_id || ''),
+                nis: String(c.nis || ''),
+                nisn: String(c.nisn || ''),
+                nama_siswa: String(c.nama_siswa || ''),
+                kelas: String(c.kelas || ''),
+                items: items.map(it => ({
+                    key: String(it.key || ''),
+                    label: String(it.label || it.key || ''),
+                    oldValue: String(it.oldValue || ''),
+                    newValue: String(it.newValue || '')
+                })),
+                note: String(c.note || ''),
+                status: String(c.status || 'Menunggu'),
+                admin_note: String(c.admin_note || ''),
+                created_at: String(c.created_at || ''),
+                updated_at: String(c.updated_at || '')
+            };
+        }
+
         let schoolData = JSON.parse(localStorage.getItem('erapor_school')) || defaultSchool;
         let students = (JSON.parse(localStorage.getItem('erapor_students')) || defaultStudents).map(normalizeStudentDates);
         let users = (JSON.parse(localStorage.getItem('erapor_users')) || defaultUsers).map(normalizeUserRecord);
+        let corrections = (JSON.parse(localStorage.getItem('erapor_corrections')) || []).map(normalizeCorrectionRecord);
+        let selectedCorrectionKeys = [];
         let currentUser = JSON.parse(sessionStorage.getItem('erapor_current_user')) || null;
 
         const savedTapelPeriods = JSON.parse(localStorage.getItem('erapor_tapel_periods'));
@@ -1683,8 +1853,11 @@
             loadSchoolForm();
             renderUserTable();
             populateKelasFilter();
+            populateUsulanKelasFilter();
             renderTable();
             renderRekapTable();
+            renderUsulanTable();
+            updatePendingCorrectionBadge();
             if (!document.getElementById('view-preview')?.classList.contains('hidden')) {
                 renderPreview();
             }
@@ -2260,15 +2433,7 @@
             const metaEl = document.getElementById('studentBiodataMeta');
             if (!container || !currentUser || currentUser.role !== 'siswa') return;
 
-            const studentObj = students.find(s =>
-                s.id === currentUser.studentId ||
-                ((s.tapel || '2025/2026') === activeTapel &&
-                 ((currentUser.nisn && String(s.nisn || '').trim() === String(currentUser.nisn).trim()) ||
-                  (currentUser.nis && String(s.nis || '').trim() === String(currentUser.nis).trim())))
-            ) || students.find(s =>
-                (currentUser.nisn && String(s.nisn || '').trim() === String(currentUser.nisn).trim()) ||
-                (currentUser.nis && String(s.nis || '').trim() === String(currentUser.nis).trim())
-            );
+            const studentObj = getCurrentLoggedStudent();
 
             if (!studentObj) {
                 container.innerHTML = '<div class="p-8 text-center text-slate-600 bg-white rounded-xl">Data biodata siswa belum tersedia atau sedang disinkronkan.</div>';
@@ -2285,6 +2450,285 @@
                 biodata: true,
                 mutasi: false
             });
+            renderStudentCorrectionFilter();
+            renderStudentCorrectionFields(studentObj);
+            renderStudentCorrectionHistory(studentObj);
+            refreshIcons();
+        }
+
+        const CORRECTION_FIELD_OPTIONS = [
+            { key: 'nama', label: '1. Nama Lengkap Peserta Didik' },
+            { key: 'nis', label: '2a. Nomor Induk (NIS)' },
+            { key: 'nisn', label: '2b. NISN' },
+            { key: 'tempat_lahir', label: '3a. Tempat Lahir' },
+            { key: 'tgl_lahir', label: '3b. Tanggal Lahir' },
+            { key: 'jk', label: '4. Jenis Kelamin', type: 'select', options: ['Laki-laki', 'Perempuan'] },
+            { key: 'agama', label: '5. Agama', type: 'select', options: ['Islam', 'Kristen', 'Katholik', 'Hindu', 'Buddha', 'Khonghucu'] },
+            { key: 'status_keluarga', label: '6. Status dalam Keluarga' },
+            { key: 'anak_ke', label: '7. Anak ke' },
+            { key: 'alamat', label: '8. Alamat Peserta Didik' },
+            { key: 'telp', label: '9. Nomor Telepon Rumah / HP' },
+            { key: 'sekolah_asal', label: '10. Sekolah Asal' },
+            { key: 'diterima_kelas', label: '11a. Diterima di Kelas' },
+            { key: 'diterima_tgl', label: '11b. Tanggal Diterima' },
+            { key: 'nama_ayah', label: '12a. Nama Ayah' },
+            { key: 'kerja_ayah', label: '14a. Pekerjaan Ayah' },
+            { key: 'nama_ibu', label: '12b. Nama Ibu' },
+            { key: 'kerja_ibu', label: '14b. Pekerjaan Ibu' },
+            { key: 'alamat_ortu', label: '13a. Alamat Orang Tua' },
+            { key: 'telp_ortu', label: '13b. Nomor Telepon Orang Tua' },
+            { key: 'nama_wali', label: '15. Nama Wali Siswa' },
+            { key: 'alamat_wali', label: '16a. Alamat Wali Peserta Didik' },
+            { key: 'telp_wali', label: '16b. Nomor Telepon Wali' },
+            { key: 'kerja_wali', label: '17. Pekerjaan Wali Peserta Didik' }
+        ];
+
+        function getCurrentLoggedStudent() {
+            if (!currentUser || currentUser.role !== 'siswa') return null;
+            return students.find(s =>
+                s.id === currentUser.studentId ||
+                ((s.tapel || '2025/2026') === activeTapel &&
+                 ((currentUser.nisn && String(s.nisn || '').trim() === String(currentUser.nisn).trim()) ||
+                  (currentUser.nis && String(s.nis || '').trim() === String(currentUser.nis).trim())))
+            ) || students.find(s =>
+                (currentUser.nisn && String(s.nisn || '').trim() === String(currentUser.nisn).trim()) ||
+                (currentUser.nis && String(s.nis || '').trim() === String(currentUser.nis).trim())
+            ) || null;
+        }
+
+        function formatTimestampID(dateObj = new Date()) {
+            try {
+                return new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Jakarta',
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(dateObj) + ' WIB';
+            } catch (e) {
+                return dateObj.toISOString();
+            }
+        }
+
+        function renderStudentCorrectionFilter() {
+            const grid = document.getElementById('studentCorrectionFilterGrid');
+            const badge = document.getElementById('studentSelectedFieldsBadge');
+            if (!grid) return;
+
+            const q = String(document.getElementById('studentCorrectionFilterSearch')?.value || '').trim().toLowerCase();
+            const filtered = CORRECTION_FIELD_OPTIONS.filter(opt => !q || opt.label.toLowerCase().includes(q));
+            const studentObj = getCurrentLoggedStudent() || {};
+
+            grid.innerHTML = filtered.map(opt => {
+                const checked = selectedCorrectionKeys.includes(opt.key);
+                const curVal = String(studentObj[opt.key] || '-');
+                return `
+                    <label class="flex items-start gap-2.5 p-2.5 rounded-xl border transition cursor-pointer ${checked ? 'bg-blue-50/90 border-blue-400 shadow-xs' : 'bg-slate-50/70 border-slate-200 hover:bg-slate-100/80'}">
+                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleCorrectionField('${opt.key}')" class="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0">
+                        <div class="min-w-0">
+                            <div class="text-xs font-semibold ${checked ? 'text-blue-900' : 'text-slate-800'}">${escapeHtmlText(opt.label)}</div>
+                            <div class="text-[11px] text-slate-500 truncate">Saat ini: ${escapeHtmlText(curVal)}</div>
+                        </div>
+                    </label>`;
+            }).join('');
+
+            if (badge) {
+                badge.textContent = `Dipilih: ${selectedCorrectionKeys.length} bagian`;
+            }
+        }
+
+        function toggleCorrectionField(key) {
+            const draftValues = {};
+            selectedCorrectionKeys.forEach(k => {
+                const el = document.getElementById(`corr_input_${k}`);
+                if (el) draftValues[k] = el.value;
+            });
+
+            if (selectedCorrectionKeys.includes(key)) {
+                selectedCorrectionKeys = selectedCorrectionKeys.filter(k => k !== key);
+            } else {
+                selectedCorrectionKeys.push(key);
+            }
+
+            renderStudentCorrectionFilter();
+            const studentObj = getCurrentLoggedStudent();
+            renderStudentCorrectionFields(studentObj, draftValues);
+            refreshIcons();
+        }
+
+        function resetStudentCorrectionFilter() {
+            selectedCorrectionKeys = [];
+            const noteEl = document.getElementById('studentCorrectionNote');
+            if (noteEl) noteEl.value = '';
+            const searchEl = document.getElementById('studentCorrectionFilterSearch');
+            if (searchEl) searchEl.value = '';
+            renderStudentCorrectionFilter();
+            renderStudentCorrectionFields(getCurrentLoggedStudent());
+            refreshIcons();
+        }
+
+        function renderStudentCorrectionFields(studentObj, draftValues = {}) {
+            const form = document.getElementById('studentCorrectionForm');
+            const container = document.getElementById('studentCorrectionFieldsContainer');
+            if (!form || !container) return;
+
+            if (!studentObj || selectedCorrectionKeys.length === 0) {
+                form.classList.add('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            form.classList.remove('hidden');
+            const orderedOptions = CORRECTION_FIELD_OPTIONS.filter(opt => selectedCorrectionKeys.includes(opt.key));
+
+            container.innerHTML = orderedOptions.map(opt => {
+                const currentVal = String(studentObj[opt.key] || '-');
+                const draftVal = draftValues[opt.key] !== undefined ? String(draftValues[opt.key]) : '';
+
+                let inputHTML = '';
+                if (opt.type === 'select' && Array.isArray(opt.options)) {
+                    inputHTML = `
+                        <select id="corr_input_${opt.key}" required class="w-full px-3 py-2 text-sm border border-blue-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="">-- Pilih perbaikan yang benar --</option>
+                            ${opt.options.map(choice => `<option value="${escapeHtmlText(choice)}" ${draftVal === choice ? 'selected' : ''}>${escapeHtmlText(choice)}</option>`).join('')}
+                        </select>`;
+                } else {
+                    inputHTML = `
+                        <input type="text" id="corr_input_${opt.key}" required value="${escapeHtmlText(draftVal)}" placeholder="Ketik data yang benar..." class="w-full px-3 py-2 text-sm border border-blue-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">`;
+                }
+
+                return `
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/80 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                        <div class="md:col-span-4">
+                            <div class="text-xs font-bold text-slate-800">${escapeHtmlText(opt.label)}</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">Data saat ini: <span class="font-medium text-slate-700">${escapeHtmlText(currentVal)}</span></div>
+                        </div>
+                        <div class="md:col-span-7">
+                            ${inputHTML}
+                        </div>
+                        <div class="md:col-span-1 flex justify-end">
+                            <button type="button" onclick="toggleCorrectionField('${opt.key}')" title="Batalkan pilihan ini" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition cursor-pointer">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        async function submitStudentCorrection(e) {
+            e.preventDefault();
+            const studentObj = getCurrentLoggedStudent();
+            if (!studentObj) {
+                showToast('Data biodata siswa belum ditemukan.');
+                return;
+            }
+            if (selectedCorrectionKeys.length === 0) {
+                showToast('Pilih minimal 1 bagian data yang ingin diperbaiki.');
+                return;
+            }
+
+            const orderedOptions = CORRECTION_FIELD_OPTIONS.filter(opt => selectedCorrectionKeys.includes(opt.key));
+            const items = [];
+            for (const opt of orderedOptions) {
+                const inputEl = document.getElementById(`corr_input_${opt.key}`);
+                let newVal = String(inputEl ? inputEl.value : '').trim();
+                if (!newVal) {
+                    showToast(`Harap isi usulan perbaikan untuk "${opt.label}".`);
+                    if (inputEl) inputEl.focus();
+                    return;
+                }
+                if (opt.key === 'tgl_lahir' || opt.key === 'diterima_tgl') {
+                    newVal = formatTanggalIndonesia(newVal);
+                }
+                items.push({
+                    key: opt.key,
+                    label: opt.label,
+                    oldValue: String(studentObj[opt.key] || '-'),
+                    newValue: newVal
+                });
+            }
+
+            const noteText = String(document.getElementById('studentCorrectionNote')?.value || '').trim();
+            const nowStr = formatTimestampID();
+            const newCorrection = normalizeCorrectionRecord({
+                id: 'corr_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                tapel: studentObj.tapel || activeTapel,
+                student_id: studentObj.id,
+                nis: studentObj.nis || '',
+                nisn: studentObj.nisn || '',
+                nama_siswa: studentObj.nama || '',
+                kelas: studentObj.kelas || '',
+                items: items,
+                note: noteText,
+                status: 'Menunggu',
+                admin_note: '',
+                created_at: nowStr,
+                updated_at: nowStr
+            });
+
+            corrections.unshift(newCorrection);
+            localStorage.setItem('erapor_corrections', JSON.stringify(corrections));
+
+            const btn = document.getElementById('btnSubmitCorrection');
+            if (btn) btn.disabled = true;
+            resetStudentCorrectionFilter();
+            renderStudentCorrectionHistory(studentObj);
+            updatePendingCorrectionBadge();
+
+            await upsertCorrectionToSpreadsheet(newCorrection);
+            if (btn) btn.disabled = false;
+            showToast('Usulan perbaikan berhasil dikirim! Menunggu input manual oleh Wali Kelas / Admin.');
+        }
+
+        function getCorrectionStatusBadgeHTML(status) {
+            if (status === 'Selesai') {
+                return '<span class="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-700">Sudah Diperbarui</span>';
+            }
+            if (status === 'Ditolak') {
+                return '<span class="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-rose-100 text-rose-700">Ditolak</span>';
+            }
+            return '<span class="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800">Menunggu Verifikasi</span>';
+        }
+
+        function renderStudentCorrectionHistory(studentObj) {
+            const listEl = document.getElementById('studentCorrectionHistoryList');
+            const countEl = document.getElementById('studentCorrectionHistoryCount');
+            if (!listEl || !studentObj) return;
+
+            const mine = corrections.filter(c =>
+                c.student_id === studentObj.id ||
+                (studentObj.nisn && String(c.nisn || '').trim() === String(studentObj.nisn).trim() && (c.tapel || activeTapel) === (studentObj.tapel || activeTapel))
+            );
+            if (countEl) countEl.textContent = `${mine.length} usulan`;
+
+            if (mine.length === 0) {
+                listEl.innerHTML = '<div class="text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">Belum ada riwayat usulan perbaikan data.</div>';
+                return;
+            }
+
+            listEl.innerHTML = mine.map(c => `
+                <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/60 space-y-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="text-xs font-semibold text-slate-600">${escapeHtmlText(c.created_at || '-')}</div>
+                        ${getCorrectionStatusBadgeHTML(c.status)}
+                    </div>
+                    <div class="space-y-1">
+                        ${c.items.map(it => `
+                            <div class="text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                <span class="font-semibold text-slate-700">${escapeHtmlText(it.label)}</span>
+                                <span class="text-slate-600">
+                                    <span class="line-through text-slate-400">${escapeHtmlText(it.oldValue || '-')}</span>
+                                    &rarr;
+                                    <strong class="text-blue-700">${escapeHtmlText(it.newValue)}</strong>
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${c.note ? `<div class="text-xs text-slate-600"><strong>Catatan Anda:</strong> ${escapeHtmlText(c.note)}</div>` : ''}
+                    ${c.admin_note ? `<div class="text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-2.5 py-1.5"><strong>Catatan Wali Kelas / Admin:</strong> ${escapeHtmlText(c.admin_note)}</div>` : ''}
+                </div>
+            `).join('');
         }
 
         function checkAuthSession() {
@@ -2351,12 +2795,13 @@
 
             if (isSiswa) {
                 closeSidebarMobile();
-                ['siswa', 'rekap', 'sekolah', 'pengguna', 'spreadsheet', 'preview'].forEach(t => {
+                ['siswa', 'rekap', 'usulan', 'sekolah', 'pengguna', 'spreadsheet', 'preview'].forEach(t => {
                     const viewEl = document.getElementById(`view-${t}`);
                     if (viewEl) viewEl.classList.add('hidden');
                 });
                 if (studentViewEl) studentViewEl.classList.remove('hidden');
                 ensureTapelOption(activeTapel);
+                selectedCorrectionKeys = [];
                 renderStudentBiodataView();
                 refreshIcons();
                 return;
@@ -2367,7 +2812,10 @@
             loadSchoolForm();
             renderUserTable();
             populateKelasFilter();
+            populateUsulanKelasFilter();
             renderTable();
+            renderUsulanTable();
+            updatePendingCorrectionBadge();
             switchTab('siswa');
         }
 
@@ -2667,10 +3115,18 @@
         }
 
         // --- MODAL TAMBAH & EDIT PESERTA DIDIK ---
+        function hideCorrectionReferenceBanner() {
+            const banner = document.getElementById('correctionReferenceBanner');
+            const content = document.getElementById('correctionReferenceContent');
+            if (banner) banner.classList.add('hidden');
+            if (content) content.innerHTML = '';
+        }
+
         function openAddModal() {
             document.getElementById('modalSiswaTitle').textContent = 'Tambah Peserta Didik';
             document.getElementById('siswaForm').reset();
             document.getElementById('edit_id').value = '';
+            hideCorrectionReferenceBanner();
 
             const kelasEl = document.getElementById('f_kelas');
             if (currentUser && currentUser.role === 'walas') {
@@ -2693,6 +3149,7 @@
             document.getElementById('modalSiswaTitle').textContent = 'Edit Biodata Peserta Didik';
             document.getElementById('siswaForm').reset();
             document.getElementById('edit_id').value = s.id;
+            hideCorrectionReferenceBanner();
             Object.keys(s).forEach(k => {
                 const el = document.getElementById(`f_${k}`);
                 if (el) el.value = s[k] || '';
@@ -2707,6 +3164,215 @@
             }
             document.getElementById('modalSiswa').classList.remove('hidden');
             refreshIcons();
+        }
+
+        function openEditModalFromCorrection(studentId, correctionId) {
+            const s = students.find(item => item.id === studentId);
+            if (!s) {
+                showToast('Data peserta didik tidak ditemukan pada Tahun Ajaran ini.');
+                return;
+            }
+            openEditModal(studentId);
+            const corr = corrections.find(c => c.id === correctionId);
+            const banner = document.getElementById('correctionReferenceBanner');
+            const content = document.getElementById('correctionReferenceContent');
+            if (corr && banner && content) {
+                content.innerHTML = corr.items.map(it =>
+                    `<div class="flex flex-wrap items-center justify-between gap-2 bg-white border border-amber-200 rounded-lg px-3 py-1.5">
+                        <span class="font-semibold text-slate-800">${escapeHtmlText(it.label)}</span>
+                        <span>Usulan Siswa: <strong class="text-blue-700">${escapeHtmlText(it.newValue)}</strong></span>
+                    </div>`
+                ).join('') + (corr.note ? `<div class="pt-1 text-amber-900"><strong>Catatan Siswa:</strong> ${escapeHtmlText(corr.note)}</div>` : '');
+                banner.classList.remove('hidden');
+                refreshIcons();
+            }
+        }
+
+        // --- KELOLA USULAN PERBAIKAN OLEH ADMIN & WALI KELAS ---
+        function getAccessibleCorrections() {
+            if (!currentUser || currentUser.role === 'siswa') return [];
+            const tapelList = corrections.filter(c => (c.tapel || '2025/2026') === activeTapel);
+            if (currentUser.role === 'admin') return tapelList;
+            return tapelList.filter(c => String(c.kelas || '').toUpperCase() === String(currentUser.kelas || '').toUpperCase());
+        }
+
+        function updatePendingCorrectionBadge() {
+            const badge = document.getElementById('pendingCorrectionBadge');
+            if (!badge) return;
+            if (!currentUser || currentUser.role === 'siswa') {
+                badge.classList.add('hidden');
+                return;
+            }
+            const pendingCount = getAccessibleCorrections().filter(c => c.status === 'Menunggu').length;
+            if (pendingCount > 0) {
+                badge.textContent = pendingCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function populateUsulanKelasFilter() {
+            const select = document.getElementById('usulanFilterKelas');
+            if (!select) return;
+            if (currentUser && currentUser.role === 'walas') {
+                select.innerHTML = `<option value="${escapeHtmlText(currentUser.kelas)}">Kelas ${escapeHtmlText(currentUser.kelas)}</option>`;
+                select.disabled = true;
+                return;
+            }
+            select.disabled = false;
+            const prev = select.value;
+            const kelasSet = [...new Set(getAccessibleCorrections().map(c => c.kelas).filter(Boolean))].sort();
+            select.innerHTML = '<option value="">Semua Kelas</option>' +
+                kelasSet.map(k => `<option value="${escapeHtmlText(k)}">${escapeHtmlText(k)}</option>`).join('');
+            select.value = kelasSet.includes(prev) ? prev : '';
+        }
+
+        function renderUsulanTable() {
+            const listEl = document.getElementById('usulanListContainer');
+            const emptyEl = document.getElementById('usulanEmptyState');
+            if (!listEl || !emptyEl) return;
+
+            const tapelLbl = document.getElementById('usulanTapelLabel');
+            if (tapelLbl) tapelLbl.textContent = activeTapel;
+
+            const accessible = getAccessibleCorrections();
+            const pendingEl = document.getElementById('usulanPendingCount');
+            const doneEl = document.getElementById('usulanDoneCount');
+            const rejEl = document.getElementById('usulanRejectedCount');
+            if (pendingEl) pendingEl.textContent = accessible.filter(c => c.status === 'Menunggu').length;
+            if (doneEl) doneEl.textContent = accessible.filter(c => c.status === 'Selesai').length;
+            if (rejEl) rejEl.textContent = accessible.filter(c => c.status === 'Ditolak').length;
+
+            const q = String(document.getElementById('usulanSearchInput')?.value || '').trim().toLowerCase();
+            const klsFilter = String(document.getElementById('usulanFilterKelas')?.value || '');
+            const statusFilter = String(document.getElementById('usulanFilterStatus')?.value || '');
+
+            const filtered = accessible.filter(c => {
+                if (klsFilter && c.kelas !== klsFilter) return false;
+                if (statusFilter && c.status !== statusFilter) return false;
+                if (!q) return true;
+                const itemsText = c.items.map(it => `${it.label} ${it.oldValue} ${it.newValue}`).join(' ').toLowerCase();
+                return (c.nama_siswa || '').toLowerCase().includes(q) ||
+                       (c.nis || '').toLowerCase().includes(q) ||
+                       (c.nisn || '').toLowerCase().includes(q) ||
+                       itemsText.includes(q);
+            });
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            listEl.innerHTML = filtered.map(c => {
+                const studentExists = students.find(s =>
+                    s.id === c.student_id ||
+                    ((s.tapel || '2025/2026') === (c.tapel || activeTapel) && c.nisn && String(s.nisn || '').trim() === String(c.nisn).trim())
+                );
+                const targetStudentId = studentExists ? studentExists.id : c.student_id;
+
+                return `
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 space-y-3.5">
+                        <div class="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="text-sm sm:text-base font-bold text-slate-900">${escapeHtmlText(c.nama_siswa || '-')}</h3>
+                                    <span class="px-2 py-0.5 text-[11px] font-semibold rounded-md bg-blue-50 text-blue-700">${escapeHtmlText(c.kelas || '-')}</span>
+                                    ${getCorrectionStatusBadgeHTML(c.status)}
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1">
+                                    NIS / NISN: <span class="font-mono text-slate-700">${escapeHtmlText(c.nis || '-')} / ${escapeHtmlText(c.nisn || '-')}</span> • Diajukan: ${escapeHtmlText(c.created_at || '-')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase">
+                                        <th class="p-2.5 w-1/3">Bagian Data</th>
+                                        <th class="p-2.5 w-1/3">Data Saat Ini (Resmi)</th>
+                                        <th class="p-2.5 w-1/3">Usulan Perbaikan Siswa</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${c.items.map(it => {
+                                        const liveVal = studentExists ? String(studentExists[it.key] || '-') : it.oldValue;
+                                        return `
+                                            <tr>
+                                                <td class="p-2.5 font-semibold text-slate-800">${escapeHtmlText(it.label)}</td>
+                                                <td class="p-2.5 text-slate-500">${escapeHtmlText(liveVal)}</td>
+                                                <td class="p-2.5 font-bold text-blue-700 bg-blue-50/40">${escapeHtmlText(it.newValue)}</td>
+                                            </tr>`;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        ${c.note ? `<div class="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"><strong>Keterangan Siswa:</strong> ${escapeHtmlText(c.note)}</div>` : ''}
+
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
+                            <div class="flex-1">
+                                <input type="text" id="admin_note_${escapeHtmlText(c.id)}" value="${escapeHtmlText(c.admin_note || '')}" placeholder="Catatan Wali Kelas / Admin (opsional)..." class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="button" onclick="openEditModalFromCorrection('${escapeHtmlText(targetStudentId)}', '${escapeHtmlText(c.id)}')" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition cursor-pointer">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                    <span>Edit Biodata Siswa</span>
+                                </button>
+                                ${c.status !== 'Selesai' ? `
+                                <button type="button" onclick="setCorrectionStatus('${escapeHtmlText(c.id)}', 'Selesai')" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition cursor-pointer">
+                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                                    <span>Tandai Selesai</span>
+                                </button>` : `
+                                <button type="button" onclick="setCorrectionStatus('${escapeHtmlText(c.id)}', 'Menunggu')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
+                                    <span>Kembalikan Menunggu</span>
+                                </button>`}
+                                ${c.status !== 'Ditolak' ? `
+                                <button type="button" onclick="setCorrectionStatus('${escapeHtmlText(c.id)}', 'Ditolak')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition cursor-pointer">
+                                    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                    <span>Tolak</span>
+                                </button>` : ''}
+                                <button type="button" onclick="deleteCorrection('${escapeHtmlText(c.id)}')" title="Hapus Usulan" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+            refreshIcons();
+        }
+
+        async function setCorrectionStatus(id, status) {
+            if (!currentUser || currentUser.role === 'siswa') return;
+            const idx = corrections.findIndex(c => c.id === id);
+            if (idx === -1) return;
+            const noteInput = document.getElementById(`admin_note_${id}`);
+            const adminNote = noteInput ? String(noteInput.value || '').trim() : (corrections[idx].admin_note || '');
+            corrections[idx] = {
+                ...corrections[idx],
+                status,
+                admin_note: adminNote,
+                updated_at: formatTimestampID()
+            };
+            localStorage.setItem('erapor_corrections', JSON.stringify(corrections));
+            renderUsulanTable();
+            updatePendingCorrectionBadge();
+            showToast(`Status usulan perbaikan diubah menjadi "${status}".`);
+            await upsertCorrectionToSpreadsheet(corrections[idx]);
+        }
+
+        async function deleteCorrection(id) {
+            if (!currentUser || currentUser.role === 'siswa') return;
+            corrections = corrections.filter(c => c.id !== id);
+            localStorage.setItem('erapor_corrections', JSON.stringify(corrections));
+            populateUsulanKelasFilter();
+            renderUsulanTable();
+            updatePendingCorrectionBadge();
+            showToast('Usulan perbaikan dihapus.');
+            await deleteCorrectionInSpreadsheet(id);
         }
 
         function openMutasiModal(id) {
@@ -2813,7 +3479,7 @@
             const studentViewEl = document.getElementById('view-student-biodata');
             if (studentViewEl) studentViewEl.classList.add('hidden');
 
-            ['siswa', 'rekap', 'sekolah', 'pengguna', 'spreadsheet', 'preview'].forEach(t => {
+            ['siswa', 'rekap', 'usulan', 'sekolah', 'pengguna', 'spreadsheet', 'preview'].forEach(t => {
                 const viewEl = document.getElementById(`view-${t}`);
                 const btn = document.getElementById(`tab-${t}`);
                 if (viewEl) viewEl.classList.add('hidden');
@@ -2834,6 +3500,11 @@
 
             if (tabName === 'rekap') {
                 renderRekapTable();
+            }
+            if (tabName === 'usulan') {
+                populateUsulanKelasFilter();
+                renderUsulanTable();
+                updatePendingCorrectionBadge();
             }
             if (tabName === 'sekolah') {
                 loadSchoolForm();
@@ -3090,6 +3761,8 @@
             renderTable();
             renderRekapTable();
             renderUserTable();
+            renderUsulanTable();
+            hideCorrectionReferenceBanner();
             closeModal('modalSiswa');
             await syncStudentsToSpreadsheet(obj.tapel || activeTapel);
             await syncUsersToSpreadsheet();
@@ -3963,6 +4636,11 @@
                         localStorage.setItem('erapor_students', JSON.stringify(students));
                     }
 
+                    if (Array.isArray(data.corrections)) {
+                        corrections = data.corrections.map(normalizeCorrectionRecord);
+                        localStorage.setItem('erapor_corrections', JSON.stringify(corrections));
+                    }
+
                     populateAllTapelDropdowns();
                     loadSchoolForm();
                     if (currentUser && currentUser.role === 'admin') {
@@ -3970,8 +4648,11 @@
                         if (loggedInfo) loggedInfo.textContent = `${currentUser.nama} • ${schoolData.nama}`;
                     }
                     populateKelasFilter();
+                    populateUsulanKelasFilter();
                     renderTable();
                     renderRekapTable();
+                    renderUsulanTable();
+                    updatePendingCorrectionBadge();
                     if (currentUser && currentUser.role === 'siswa') {
                         renderStudentBiodataView();
                     } else if (!document.getElementById('view-preview')?.classList.contains('hidden')) {
@@ -4030,6 +4711,39 @@
             }
         }
 
+        async function upsertCorrectionToSpreadsheet(correctionObj) {
+            if (!gsConfig.webAppUrl || !correctionObj) return;
+            try {
+                const payload = {
+                    ...correctionObj,
+                    fields_json: JSON.stringify(correctionObj.items || [])
+                };
+                const res = await callAppsScript('upsertCorrection', { correction: payload });
+                if (res && Array.isArray(res.corrections)) {
+                    corrections = res.corrections.map(normalizeCorrectionRecord);
+                    localStorage.setItem('erapor_corrections', JSON.stringify(corrections));
+                    if (currentUser && currentUser.role === 'siswa') {
+                        renderStudentCorrectionHistory(getCurrentLoggedStudent());
+                    } else {
+                        populateUsulanKelasFilter();
+                        renderUsulanTable();
+                        updatePendingCorrectionBadge();
+                    }
+                }
+            } catch (err) {
+                console.error('Gagal sync usulan perbaikan:', err);
+            }
+        }
+
+        async function deleteCorrectionInSpreadsheet(id) {
+            if (!gsConfig.webAppUrl || !id) return;
+            try {
+                await callAppsScript('deleteCorrection', { id });
+            } catch (err) {
+                console.error('Gagal hapus usulan perbaikan:', err);
+            }
+        }
+
         async function syncUsersToSpreadsheet() {
             if (!gsConfig.webAppUrl) return;
             try {
@@ -4054,13 +4768,16 @@
                 });
                 await callAppsScript('saveTapelPeriods', { periods: tapelPeriods });
                 await callAppsScript('saveUsers', { users });
+                await callAppsScript('saveCorrections', {
+                    corrections: corrections.map(c => ({ ...c, fields_json: JSON.stringify(c.items || []) }))
+                });
 
                 const allTapels = [...new Set([activeTapel, ...tapelPeriods.map(p => p.tapel), ...students.map(s => s.tapel || '2025/2026')])];
                 for (const tp of allTapels) {
                     const list = students.filter(s => (s.tapel || '2025/2026') === tp);
                     await callAppsScript('saveStudents', { tapel: tp, students: list });
                 }
-                showToast('Seluruh sheet (Identitas Sekolah, Periode Tahun Ajaran, Pengguna & Siswa per TA) berhasil diperbarui!');
+                showToast('Seluruh sheet (Identitas Sekolah, Periode Tahun Ajaran, Pengguna, Siswa & Usulan Perbaikan) berhasil diperbarui!');
             } catch (err) {
                 showToast('Gagal mengirim ke Spreadsheet: ' + err.message);
             }
@@ -4089,6 +4806,7 @@
                 '',
                 'const PERIOD_HEADERS = ["tapel", "kepsek", "nip_kepsek", "titimangsa"];',
                 'const USER_HEADERS = ["id", "nama", "role", "kelas", "username", "password", "tapel"];',
+                'const CORRECTION_HEADERS = ["id", "tapel", "student_id", "nis", "nisn", "nama_siswa", "kelas", "fields_json", "note", "status", "admin_note", "created_at", "updated_at"];',
                 '',
                 'const BULAN_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];',
                 'const EN_MONTH_MAP = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, mei: 4, jun: 5, jul: 6, aug: 7, agu: 7, sep: 8, oct: 9, okt: 9, nov: 10, dec: 11, des: 11 };',
@@ -4119,7 +4837,7 @@
                 '',
                 'function doGet(e) {',
                 '  const ss = SpreadsheetApp.getActiveSpreadsheet();',
-                '  const result = { status: "ok", school: {}, tapelPeriods: [], users: [], students: [] };',
+                '  const result = { status: "ok", school: {}, tapelPeriods: [], users: [], students: [], corrections: [] };',
                 '  let folderId = (e && e.parameter && e.parameter.logoFolderId) ? String(e.parameter.logoFolderId).trim() : "";',
                 '',
                 '  const shSchool = ss.getSheetByName("Identitas_Sekolah");',
@@ -4187,6 +4905,8 @@
                 '      });',
                 '    }',
                 '  });',
+                '',
+                '  result.corrections = readCorrectionsSheet(ss);',
                 '',
                 '  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);',
                 '}',
@@ -4301,10 +5021,67 @@
                 '      return jsonResponse({ status: "ok", sheet: sheetName });',
                 '    }',
                 '',
+                '    if (action === "upsertCorrection") {',
+                '      const corr = body.correction || {};',
+                '      const current = readCorrectionsSheet(ss);',
+                '      const idx = current.findIndex(c => String(c.id) === String(corr.id));',
+                '      if (idx > -1) {',
+                '        current[idx] = corr;',
+                '      } else {',
+                '        current.unshift(corr);',
+                '      }',
+                '      writeCorrectionsSheet(ss, current);',
+                '      return jsonResponse({ status: "ok", corrections: current });',
+                '    }',
+                '',
+                '    if (action === "deleteCorrection") {',
+                '      const targetId = String(body.id || "");',
+                '      const current = readCorrectionsSheet(ss).filter(c => String(c.id) !== targetId);',
+                '      writeCorrectionsSheet(ss, current);',
+                '      return jsonResponse({ status: "ok", corrections: current });',
+                '    }',
+                '',
+                '    if (action === "saveCorrections") {',
+                '      const list = body.corrections || [];',
+                '      writeCorrectionsSheet(ss, list);',
+                '      return jsonResponse({ status: "ok" });',
+                '    }',
+                '',
                 '    return jsonResponse({ status: "error", message: "Aksi tidak dikenali" });',
                 '  } catch (err) {',
                 '    return jsonResponse({ status: "error", message: err.toString() });',
                 '  }',
+                '}',
+                '',
+                'function readCorrectionsSheet(ss) {',
+                '  const sh = ss.getSheetByName("Usulan_Perbaikan");',
+                '  if (!sh || sh.getLastRow() <= 1) return [];',
+                '  const colCount = Math.min(Math.max(sh.getLastColumn(), 1), CORRECTION_HEADERS.length);',
+                '  const data = sh.getRange(2, 1, sh.getLastRow() - 1, colCount).getValues();',
+                '  const list = [];',
+                '  data.forEach(r => {',
+                '    if (!r[0]) return;',
+                '    const obj = {};',
+                '    CORRECTION_HEADERS.forEach((h, i) => {',
+                '      obj[h] = String(i < colCount ? (r[i] || "") : "");',
+                '    });',
+                '    list.push(obj);',
+                '  });',
+                '  return list;',
+                '}',
+                '',
+                'function writeCorrectionsSheet(ss, list) {',
+                '  const sh = getOrCreateSheet(ss, "Usulan_Perbaikan", CORRECTION_HEADERS);',
+                '  sh.clearContents();',
+                '  const rows = [CORRECTION_HEADERS];',
+                '  (list || []).forEach(c => {',
+                '    const fieldsStr = typeof c.fields_json === "string" && c.fields_json ? c.fields_json : JSON.stringify(c.items || []);',
+                '    rows.push(CORRECTION_HEADERS.map(h => h === "fields_json" ? fieldsStr : String(c[h] || "")));',
+                '  });',
+                '  const range = sh.getRange(1, 1, rows.length, CORRECTION_HEADERS.length);',
+                '  range.setNumberFormat("@");',
+                '  range.setValues(rows);',
+                '  sh.getRange(1, 1, 1, CORRECTION_HEADERS.length).setFontWeight("bold");',
                 '}',
                 '',
                 'function upsertKeyValueRows(sh, mapObj) {',
